@@ -1,0 +1,3101 @@
+﻿<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<title>NeuroGuide Light</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="/static/three.min.js"></script>
+<style>
+:root {
+  --bg: #f8f9fb; --panel: #ffffff; --border: #e8eaed; --border-light: #f0f2f5;
+  --blue: #4a7cf7; --blue-dk: #3461d4; --blue-lt: #eef2ff;
+  --red: #f25c54; --orange: #f7924a; --yellow: #f5c842; --green: #3ecf8e;
+  --gray: #9ba3af; --gray-lt: #f4f5f7; --text: #1a1f2e; --text-2: #3d4452; --sub: #6b7280;
+  --sidebar-bg: #252b3b; --radius: 10px; --radius-sm: 7px;
+  --shadow: 0 1px 8px rgba(0,0,0,0.07); --shadow-md: 0 4px 20px rgba(0,0,0,0.08);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); font-size: 13px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+.topbar { background: var(--panel); border-bottom: 1px solid var(--border); height: 50px; display: flex; align-items: center; padding: 0 24px; gap: 12px; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+.topbar-logo { font-size: 15px; font-weight: 700; color: var(--blue); letter-spacing: -0.3px; }
+.topbar-sub { font-size: 12px; color: var(--sub); flex: 1; }
+.topbar-ver { font-size: 11px; background: var(--blue-lt); color: var(--blue-dk); padding: 3px 10px; border-radius: 20px; font-weight: 500; }
+.app { display: grid; grid-template-columns: 210px 1fr; height: calc(100vh - 50px); }
+.sidebar { background: var(--sidebar-bg); display: flex; flex-direction: column; overflow-y: auto; padding: 16px 0 24px; }
+.sidebar::-webkit-scrollbar { width: 0; }
+.nav-section { padding: 14px 16px 4px; font-size: 10px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: rgba(255,255,255,0.25); }
+.nav-item { display: flex; align-items: center; gap: 9px; margin: 1px 8px; padding: 7px 10px; border-radius: var(--radius-sm); cursor: pointer; font-size: 12.5px; font-weight: 400; color: rgba(255,255,255,0.55); transition: all 0.15s; user-select: none; }
+.nav-item:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.85); }
+.nav-item.active { background: rgba(74,124,247,0.25); color: #fff; font-weight: 500; }
+.nav-icon { font-size: 14px; width: 18px; text-align: center; flex-shrink: 0; }
+main { overflow-y: auto; padding: 24px 28px; background: var(--bg); }
+main::-webkit-scrollbar { width: 5px; }
+main::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 3px; }
+.page { display: none; animation: fadeIn 0.18s ease; }
+.page.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
+.page-title { font-size: 22px; font-weight: 700; color: var(--text); letter-spacing: -0.4px; margin-bottom: 3px; }
+.page-sub { color: var(--sub); font-size: 13px; margin-bottom: 20px; }
+.card { background: var(--panel); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: 14px; }
+.card-header { padding: 12px 16px; border-bottom: 1px solid var(--border-light); display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 12.5px; color: var(--text-2); }
+.card-body { padding: 16px; }
+.inp-section { font-size: 10px; font-weight: 600; letter-spacing: 0.7px; text-transform: uppercase; color: var(--sub); margin: 14px 0 7px; padding-bottom: 4px; border-bottom: 1px solid var(--border-light); }
+.inp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(195px, 1fr)); gap: 10px; }
+.inp-group { display: flex; flex-direction: column; gap: 3px; }
+.inp-group label { font-size: 11px; font-weight: 500; color: var(--sub); }
+.inp-row { display: flex; align-items: center; gap: 8px; }
+.inp-row input, .mac-input { padding: 6px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; font-family: inherit; background: var(--gray-lt); color: var(--text); transition: all 0.15s; outline: none; }
+.inp-row input { width: 70px; text-align: center; }
+.mac-input { width: 100%; }
+.inp-row input:focus, .mac-input:focus { border-color: var(--blue); background: #fff; box-shadow: 0 0 0 3px rgba(74,124,247,0.1); }
+.inp-row input.invalid { border-color: var(--red); background: #fef2f2; }
+.norm-note { font-size: 10px; color: var(--sub); margin-top: 2px; }
+.mac-select { padding: 6px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; font-family: inherit; background: var(--gray-lt); color: var(--text); width: 100%; outline: none; }
+.rc { padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 500; min-width: 118px; text-align: center; display: inline-block; }
+.rc.red    { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+.rc.orange { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
+.rc.yellow { background: #fefce8; color: #a16207; border: 1px solid #fde68a; }
+.rc.green  { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+.rc.blue   { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+.rc.gray   { background: var(--gray-lt); color: var(--sub); border: 1px solid var(--border); }
+.test-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(285px,1fr)); gap: 6px; }
+.test-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 11px; border-radius: var(--radius-sm); background: var(--gray-lt); border: 1px solid var(--border-light); gap: 6px; }
+.test-row:hover { background: var(--blue-lt); }
+.test-name { font-size: 12px; color: var(--sub); flex: 1; }
+.test-raw { font-size: 12px; font-weight: 500; min-width: 28px; text-align: center; color: var(--text-2); }
+.test-t { font-size: 14px; font-weight: 700; min-width: 35px; text-align: center; }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border-radius: var(--radius-sm); border: none; font-size: 13px; font-family: inherit; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+.btn-primary { background: var(--blue); color: #fff; }
+.btn-primary:hover { background: var(--blue-dk); }
+.btn-outline { background: transparent; color: var(--text-2); border: 1px solid var(--border); }
+.btn-outline:hover { background: var(--gray-lt); }
+.btn-green { background: #16a34a; color: #fff; }
+.btn-green:hover { background: #15803d; }
+.btn-sm { padding: 5px 11px; font-size: 12px; }
+.btn-group { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.alert { padding: 10px 14px; border-radius: var(--radius-sm); font-size: 12.5px; margin-bottom: 12px; }
+.alert-warning { background: #fefce8; border: 1px solid #fde68a; color: #a16207; }
+.alert-info { background: var(--blue-lt); border: 1px solid #bfdbfe; color: var(--blue-dk); }
+.alert-error { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; }
+.alert-ok { background: #f0fdf4; border: 1px solid #bbf7d0; color: #16a34a; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.chart-wrap { position: relative; height: 340px; }
+.summary-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.summary-table th { text-align: left; font-size: 10px; font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase; color: var(--sub); padding: 5px 10px; border-bottom: 1px solid var(--border); }
+.summary-table td { padding: 6px 10px; border-bottom: 1px solid var(--border-light); }
+.summary-table tr:last-child td { border-bottom: none; }
+.bild-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(160px,1fr)); gap: 10px; }
+.bild-item { background: var(--gray-lt); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px; }
+.bild-label { font-size: 11px; font-weight: 500; color: var(--sub); margin-bottom: 4px; }
+.bild-val { font-size: 20px; font-weight: 700; color: var(--text); }
+.bild-interp { font-size: 10px; color: var(--sub); margin-top: 2px; }
+.bild-warn { color: var(--red); }
+.patient-bar { display: flex; align-items: center; gap: 12px; background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 16px; margin-bottom: 14px; }
+.patient-id-badge { font-size: 13px; font-weight: 700; color: var(--blue); background: var(--blue-lt); padding: 4px 12px; border-radius: 20px; }
+.patient-info-text { font-size: 12px; color: var(--sub); flex: 1; }
+/* Validerings-bubbla */
+.val-bubble { position: absolute; background: #dc2626; color: #fff; font-size: 11px; padding: 4px 9px; border-radius: 6px; white-space: nowrap; z-index: 999; pointer-events: none; }
+.val-bubble::after { content: ''; position: absolute; bottom: -5px; left: 10px; border: 5px solid transparent; border-top-color: #dc2626; border-bottom: none; }
+/* Print */
+@media print {
+  .no-print { display: none !important; }
+  .print-only { display: block !important; }
+  .app { display: block; }
+  .topbar { display: none; }
+  .sidebar { display: none; }
+  main { padding: 0; }
+  .page { display: block !important; }
+  .page:not(#page-sammanstallning) { display: none !important; }
+  .card { box-shadow: none; border: 1px solid #ccc; }
+  body { font-size: 11px; }
+}
+.print-only { display: none; }
+.print-header { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+.print-divider { border: none; border-top: 1px solid #ccc; margin: 10px 0; }
+</style>
+</head>
+<body>
+
+<div class="topbar no-print">
+  <div class="topbar-logo">NeuroGuide Light</div>
+  <div class="topbar-sub">Neuropsykologisk testversion · NUS Umeå</div>
+  <div class="topbar-ver">v1.0 · Port 5010</div>
+</div>
+
+<div class="app">
+<nav class="sidebar no-print">
+  <div class="nav-section">Klinisk data</div>
+  <div class="nav-item active" onclick="visaSida('patient')"><span class="nav-icon">🧑</span>Patientuppgifter</div>
+  <div class="nav-item" onclick="visaSida('test')"><span class="nav-icon">🧠</span>Neuropsykologiska test</div>
+  <div class="nav-section">Analys</div>
+  <div class="nav-item" onclick="visaSida('profil')"><span class="nav-icon">🕸️</span>Profiltolkning</div>
+  <div class="nav-item" onclick="visaSida('bild')"><span class="nav-icon">🖼️</span>Bilddiagnostik</div>
+  <div class="nav-item" onclick="visaSida('sammanstallning')"><span class="nav-icon">📊</span>Sammanställning</div>
+  <div class="nav-section">Avancerat</div>
+  <div class="nav-item" onclick="visaSida('matris')"><span class="nav-icon">🔢</span>Matrisanalys</div>
+  <div class="nav-item" onclick="visaSida('diagnos')"><span class="nav-icon">🔬</span>Diagnosmatris</div>
+  <div class="nav-section">Utskrift</div>
+  <div class="nav-item" onclick="oppnaProfil()"><span class="nav-icon">🖨️</span>Utskriftsprofil</div>
+</nav>
+
+<main>
+
+<!-- ═══════════════════════════════════════════════════ PATIENT -->
+<div id="page-patient" class="page active">
+  <div class="page-title">Patientuppgifter</div>
+  <div class="page-sub">Grundläggande information om patienten</div>
+
+  <div class="patient-bar no-print" id="patientBar" style="display:none">
+    <span class="patient-id-badge" id="patientIdBadge">—</span>
+    <span class="patient-info-text" id="patientInfoText">Ingen patient laddad</span>
+  </div>
+
+  <div class="card">
+    <div class="card-header">👤 Patientidentifikation</div>
+    <div class="card-body">
+      <div class="inp-grid">
+        <div class="inp-group">
+          <label>Patient-ID</label>
+          <div class="inp-row">
+            <input type="text" id="p_id" class="mac-input" placeholder="NUS-202506-XXXX" oninput="uppdateraPatientBar()">
+          </div>
+        </div>
+        <div class="inp-group">
+          <label>Namn / Initialer</label>
+          <input type="text" id="p_namn" class="mac-input" placeholder="AB">
+        </div>
+        <div class="inp-group">
+          <label>Kön</label>
+          <select id="p_kon" class="mac-select">
+            <option value="">— välj —</option>
+            <option value="Man">Man</option>
+            <option value="Kvinna">Kvinna</option>
+          </select>
+        </div>
+      </div>
+      <div class="inp-section">Ålder</div>
+      <div class="inp-grid">
+        <div class="inp-group">
+          <label>Ålder (år)</label>
+          <input type="number" id="p_alder" class="mac-input" min="0" max="120" placeholder="70"
+                 oninput="uppdateraPatientBar()">
+        </div>
+      </div>
+      <div class="inp-section">Testinformation</div>
+      <div class="inp-grid">
+        <div class="inp-group">
+          <label>Testdatum</label>
+          <input type="date" id="p_datum" class="mac-input">
+        </div>
+        <div class="inp-group">
+          <label>Testledare</label>
+          <input type="text" id="p_testledare" class="mac-input" placeholder="Namn">
+        </div>
+        <div class="inp-group">
+          <label>Utbildningsår</label>
+          <input type="number" id="p_utb" class="mac-input" min="0" max="30" placeholder="12">
+        </div>
+        <div class="inp-group">
+          <label>Modersmål</label>
+          <select id="p_sprak" class="mac-select">
+            <option value="svenska">Svenska</option>
+            <option value="annat">Annat</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card no-print">
+    <div class="card-header">💾 Spara / Hämta patient</div>
+    <div class="card-body">
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="nyPatient()">🆕 Ny patient</button>
+        <button class="btn btn-green" onclick="sparaPatient()">💾 Spara</button>
+        <button class="btn btn-outline" onclick="visaHamtaDialog()">📂 Hämta</button>
+      </div>
+      <div id="sparaStatus" style="margin-top:10px"></div>
+      <div id="hamtaPanel" style="display:none;margin-top:12px">
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" id="hamtaPidInput" class="mac-input" placeholder="Patient-ID eller välj nedan" style="flex:1">
+          <button class="btn btn-outline btn-sm" onclick="hamtaPatient()">Hämta</button>
+        </div>
+        <div id="patientListaWrap" style="margin-top:8px;max-height:200px;overflow-y:auto"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ TEST -->
+<div id="page-test" class="page">
+  <div class="page-title">Neuropsykologiska test</div>
+  <div class="page-sub">Mata in råpoäng – T-poäng beräknas automatiskt</div>
+
+  <!-- RAVLT -->
+  <div class="card">
+    <div class="card-header">🔤 RAVLT – Rey Auditory Verbal Learning Test</div>
+    <div class="card-body">
+      <div class="inp-section">Inlärningsförsök (råpoäng)</div>
+      <div class="inp-grid">
+        <div class="inp-group"><label>Försök 1</label>
+          <div class="inp-row"><input type="number" id="ravlt_1" min="0" max="15" data-validate="ravlt_trial" oninput="valideraFalt(this)"></div></div>
+        <div class="inp-group"><label>Försök 2</label>
+          <div class="inp-row"><input type="number" id="ravlt_2" min="0" max="15" data-validate="ravlt_trial" oninput="valideraFalt(this)"></div></div>
+        <div class="inp-group"><label>Försök 3</label>
+          <div class="inp-row"><input type="number" id="ravlt_3" min="0" max="15" data-validate="ravlt_trial" oninput="valideraFalt(this)"></div></div>
+        <div class="inp-group"><label>Försök 4</label>
+          <div class="inp-row"><input type="number" id="ravlt_4" min="0" max="15" data-validate="ravlt_trial" oninput="valideraFalt(this)"></div></div>
+        <div class="inp-group"><label>Försök 5</label>
+          <div class="inp-row"><input type="number" id="ravlt_5" min="0" max="15" data-validate="ravlt_trial" oninput="valideraFalt(this)"></div></div>
+        <div class="inp-group"><label>Distraktorlista B</label>
+          <div class="inp-row"><input type="number" id="ravlt_dist" min="0" max="15" data-validate="ravlt_trial" oninput="valideraFalt(this)"></div></div>
+      </div>
+      <div class="inp-section">Återgivning</div>
+      <div class="inp-grid">
+        <div class="inp-group"><label>Fördröjd ÅG (30 min)</label>
+          <div class="inp-row"><input type="number" id="ravlt_dr" min="0" max="15" data-validate="ravlt_trial" oninput="valideraFalt(this)"></div></div>
+        <div class="inp-group"><label>Igenkänning SP</label>
+          <div class="inp-row"><input type="number" id="ravlt_rek_sp" min="0" max="15" oninput="valideraFalt(this)"></div></div>
+        <div class="inp-group"><label>Igenkänning FP</label>
+          <div class="inp-row"><input type="number" id="ravlt_rek_fp" min="0" max="50" oninput="valideraFalt(this)"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BVMT-R -->
+  <div class="card">
+    <div class="card-header">👁️ BVMT-R – Brief Visuospatial Memory Test-Revised</div>
+    <div class="card-body">
+      <div class="inp-section">Inlärningsförsök (råpoäng, max 12 per försök)</div>
+      <div class="inp-grid">
+        <div class="inp-group"><label>Försök 1</label>
+          <div class="inp-row"><input type="number" id="bvmt_1" min="0" max="12" data-validate="bvmt_trial" oninput="valideraFalt(this)"></div></div>
+        <div class="inp-group"><label>Försök 2</label>
+          <div class="inp-row"><input type="number" id="bvmt_2" min="0" max="12" data-validate="bvmt_trial" oninput="valideraFalt(this)"></div></div>
+        <div class="inp-group"><label>Försök 3</label>
+          <div class="inp-row"><input type="number" id="bvmt_3" min="0" max="12" data-validate="bvmt_trial" oninput="valideraFalt(this)"></div></div>
+        <div class="inp-group"><label>Fördröjd ÅG (25 min)</label>
+          <div class="inp-row"><input type="number" id="bvmt_dr" min="0" max="12" data-validate="bvmt_trial" oninput="valideraFalt(this)"></div></div>
+        <div class="inp-group"><label>Igenkänning Hits (0–12)</label>
+          <div class="inp-row"><input type="number" id="bvmt_rek_sp" min="0" max="12" oninput="valideraFalt(this)"></div></div>
+        <div class="inp-group"><label>Igenkänning Falsklarm (0–6)</label>
+          <div class="inp-row"><input type="number" id="bvmt_rek_fp" min="0" max="6" oninput="valideraFalt(this)"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RCFT -->
+  <div class="card">
+    <div class="card-header">✏️ RCFT – Rey Complex Figure Test</div>
+    <div class="card-body">
+      <div class="norm-note" style="margin-bottom:8px">Normer: Meyers &amp; Meyers 1995. Max 36 poäng.</div>
+      <div class="inp-grid">
+        <div class="inp-group"><label>Kopia (råpoäng)</label>
+          <div class="inp-row"><input type="number" id="rcft_kop" min="0" max="36" step="0.5" data-validate="rcft" oninput="valideraFalt(this)"></div></div>
+        <div class="inp-group"><label>Omedelbar ÅG (3 min)</label>
+          <div class="inp-row"><input type="number" id="rcft_3min" min="0" max="36" step="0.5" data-validate="rcft" oninput="valideraFalt(this)"></div></div>
+        <div class="inp-group"><label>Fördröjd ÅG (30 min)</label>
+          <div class="inp-row"><input type="number" id="rcft_30min" min="0" max="36" step="0.5" data-validate="rcft" oninput="valideraFalt(this)"></div></div>
+        <div class="inp-group"><label>Igenkänning SP</label>
+          <div class="inp-row"><input type="number" id="rcft_rek_sp" min="0" max="24" oninput="valideraFalt(this)"></div></div>
+        <div class="inp-group"><label>Igenkänning FP</label>
+          <div class="inp-row"><input type="number" id="rcft_rek_fp" min="0" max="24" oninput="valideraFalt(this)"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WAIS-IV -->
+  <div class="card">
+    <div class="card-header">🧩 WAIS-IV – Deltester</div>
+    <div class="card-body">
+      <div class="inp-section">Råpoäng (konverteras till skalpoäng → T-poäng)</div>
+      <div class="inp-grid">
+        <div class="inp-group">
+          <label>Blockmönster (max 66)</label>
+          <div class="inp-row"><input type="number" id="block_raw" min="0" max="66" data-validate="block" oninput="valideraFalt(this)"></div>
+        </div>
+        <div class="inp-group">
+          <label>Likheter (max 36)</label>
+          <div class="inp-row"><input type="number" id="lik_raw" min="0" max="36" data-validate="lik" oninput="valideraFalt(this)"></div>
+        </div>
+        <div class="inp-group">
+          <label>Information (max 26)</label>
+          <div class="inp-row"><input type="number" id="info_raw" min="0" max="26" data-validate="info" oninput="valideraFalt(this)"></div>
+        </div>
+        <div class="inp-group">
+          <label>Kodning (max 109)</label>
+          <div class="inp-row"><input type="number" id="kod_raw" min="0" max="135" data-validate="kod" oninput="valideraFalt(this)"></div>
+        </div>
+      </div>
+      <div class="inp-section">Sifferrepetition (WAIS-III normer)</div>
+      <div class="inp-grid">
+        <div class="inp-group">
+          <label>Framlänges (råpoäng)</label>
+          <div class="inp-row"><input type="number" id="siff_fram" min="0" max="16" oninput="valideraFalt(this)"></div>
+        </div>
+        <div class="inp-group">
+          <label>Baklänges (råpoäng)</label>
+          <div class="inp-row"><input type="number" id="siff_bak" min="0" max="14" oninput="valideraFalt(this)"></div>
+        </div>
+        <div class="inp-group">
+          <label>Ordningsföljd (råpoäng)</label>
+          <div class="inp-row"><input type="number" id="siff_ordning" min="0" max="14" oninput="valideraFalt(this)"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TMT -->
+  <div class="card">
+    <div class="card-header">⏱️ TMT – Trail Making Test</div>
+    <div class="card-body">
+      <div class="norm-note" style="margin-bottom:8px">Normer: TMT 15b Tabell 4.19 A-MSS. Kortare tid = högre skalpoäng.</div>
+      <div class="inp-grid">
+        <div class="inp-group">
+          <label>TMT-A (sekunder)</label>
+          <div class="inp-row"><input type="number" id="tmt_a" min="1" max="999" data-validate="tmt" oninput="valideraFalt(this)"></div>
+        </div>
+        <div class="inp-group">
+          <label>TMT-B (sekunder)</label>
+          <div class="inp-row"><input type="number" id="tmt_b" min="1" max="999" data-validate="tmt" oninput="valideraFalt(this)"></div>
+        </div>
+        <div class="inp-group">
+          <label>TMT B/A-kvot (auto)</label>
+          <div class="inp-row"><input type="number" id="tmt_ba_kvot_display" disabled style="width:80px;background:#f0f2f5"></div>
+          <div class="norm-note">&gt;3.0 = klinisk markör för exekutiv svikt</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Verbalt flöde -->
+  <div class="card">
+    <div class="card-header">💬 Verbalt flöde</div>
+    <div class="card-body">
+      <div class="inp-grid">
+        <div class="inp-group">
+          <label>FAS – F (antal ord)</label>
+          <div class="inp-row"><input type="number" id="fas_f" min="0" max="60" oninput="valideraFalt(this)"></div>
+        </div>
+        <div class="inp-group">
+          <label>FAS – A (antal ord)</label>
+          <div class="inp-row"><input type="number" id="fas_a" min="0" max="60" oninput="valideraFalt(this)"></div>
+        </div>
+        <div class="inp-group">
+          <label>FAS – S (antal ord)</label>
+          <div class="inp-row"><input type="number" id="fas_s" min="0" max="60" oninput="valideraFalt(this)"></div>
+        </div>
+        <div class="inp-group">
+          <label>Djurnamn (antal ord)</label>
+          <div class="inp-row"><input type="number" id="djur" min="0" max="60" oninput="valideraFalt(this)"></div>
+        </div>
+        <div class="inp-group">
+          <label>Utbildningsnivå (för normer)</label>
+          <select id="utb_flode" class="mac-select">
+            <option value="A">Låg (&lt;12 år)</option>
+            <option value="B" selected>Hög (≥12 år)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Klocktest -->
+  <div class="card">
+    <div class="card-header">🕐 Klocktest</div>
+    <div class="card-body">
+      <div class="inp-grid">
+        <div class="inp-group">
+          <label>System</label>
+          <select id="klocka_system" class="mac-select">
+            <option value="shulman">Shulman (0–5)</option>
+            <option value="rouleau">Rouleau (0–10)</option>
+          </select>
+        </div>
+        <div class="inp-group">
+          <label>Poäng Rita (CDT)</label>
+          <div class="inp-row"><input type="number" id="klocka_rita" min="0" max="10" step="0.5" oninput="valideraFalt(this)"></div>
+        </div>
+        <div class="inp-group">
+          <label>Poäng Avläsa (CDT)</label>
+          <div class="inp-row"><input type="number" id="klocka_avlasa" min="0" max="10" step="0.5" oninput="valideraFalt(this)"></div>
+        </div>
+      </div>
+      <div id="klockaTolkning" style="margin-top:8px;font-size:12px;color:var(--sub)"></div>
+    </div>
+  </div>
+
+  <div class="btn-group no-print">
+    <button class="btn btn-primary" onclick="berakna()">🧮 Beräkna T-poäng</button>
+    <button class="btn btn-outline" onclick="rensaTest()">🗑️ Rensa fält</button>
+  </div>
+
+  <!-- Resultattabell -->
+  <div id="resultatKort" style="display:none;margin-top:16px">
+    <div class="card">
+      <div class="card-header">📋 Beräknade T-poäng</div>
+      <div class="card-body" style="padding:0">
+        <table class="summary-table">
+          <thead><tr>
+            <th>Test</th><th>Råpoäng</th><th>Skalpoäng</th><th>T-poäng</th><th>Nivå</th>
+          </tr></thead>
+          <tbody id="resultatTabell"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ PROFILTOLKNING -->
+<div id="page-profil" class="page">
+  <div class="page-title">Profiltolkning</div>
+  <div class="page-sub">Mönsterigenkänning och spindeldiagram</div>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="card-header">🕸️ Neuropsykologisk profil</div>
+      <div class="card-body">
+        <div class="chart-wrap"><canvas id="spindelNP"></canvas></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">🔍 Mönsteranalys</div>
+      <div class="card-body" id="monsterPanel">
+        <div class="alert alert-info">Beräkna T-poäng på testsidan först, klicka sedan på knappen nedan.</div>
+        <button class="btn btn-primary no-print" onclick="korProfiltolkning()" style="margin-top:8px">🔍 Kör profiltolkning</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">📝 Textuell sammanfattning</div>
+    <div class="card-body">
+      <pre id="profilText" style="font-family:inherit;font-size:12px;white-space:pre-wrap;color:var(--text-2)">Ingen sammanfattning ännu.</pre>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ BILDDIAGNOSTIK -->
+<div id="page-bild" class="page">
+  <div class="page-title">Bilddiagnostik</div>
+  <div class="page-sub">MR-fynd enligt Scheltens, Koedam och Fazekas skalor</div>
+
+  <div class="card">
+    <div class="card-header">🧲 MR-fynd (numeriska skalor)</div>
+    <div class="card-body">
+      <div class="inp-section">Atrofi</div>
+      <div class="inp-grid">
+        <div class="inp-group">
+          <label>MTA höger (0–4, Scheltens)</label>
+          <div class="inp-row"><input type="number" id="mta_h" min="0" max="4" step="1" data-validate="mta" oninput="valideraFalt(this);tolkaBild()"></div>
+          <div class="norm-note">0=normal, 1=lätt, 2=mild, 3=måttlig, 4=uttalad</div>
+        </div>
+        <div class="inp-group">
+          <label>MTA vänster (0–4, Scheltens)</label>
+          <div class="inp-row"><input type="number" id="mta_v" min="0" max="4" step="1" data-validate="mta" oninput="valideraFalt(this);tolkaBild()"></div>
+        </div>
+        <div class="inp-group">
+          <label>GCA (0–3, Global cortical)</label>
+          <div class="inp-row"><input type="number" id="gca" min="0" max="3" step="1" data-validate="gca" oninput="valideraFalt(this);tolkaBild()"></div>
+          <div class="norm-note">0=ingen, 1=lätt, 2=måttlig, 3=uttalad</div>
+        </div>
+        <div class="inp-group">
+          <label>Koedam (0–3, Parietal)</label>
+          <div class="inp-row"><input type="number" id="koedam" min="0" max="3" step="1" data-validate="gca" oninput="valideraFalt(this);tolkaBild()"></div>
+        </div>
+      </div>
+      <div class="inp-section">Vitsubstansförändringar (Fazekas)</div>
+      <div class="inp-grid">
+        <div class="inp-group">
+          <label>Fazekas total (0–3)</label>
+          <div class="inp-row"><input type="number" id="fazekas" min="0" max="3" step="1" data-validate="gca" oninput="valideraFalt(this);tolkaBild()"></div>
+        </div>
+        <div class="inp-group">
+          <label>Fazekas periventrikulärt</label>
+          <div class="inp-row"><input type="number" id="fazekas_pv" min="0" max="3" step="1" data-validate="gca" oninput="valideraFalt(this);tolkaBild()"></div>
+        </div>
+        <div class="inp-group">
+          <label>Fazekas djup vit substans</label>
+          <div class="inp-row"><input type="number" id="fazekas_dvs" min="0" max="3" step="1" data-validate="gca" oninput="valideraFalt(this);tolkaBild()"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="bildTolkPanel" style="display:none">
+    <div class="card">
+      <div class="card-header">⚠️ Automatisk tolkning</div>
+      <div class="card-body" id="bildTolkText"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">🕸️ Bilddiagnostik – spindeldiagram</div>
+    <div class="card-body">
+      <div class="chart-wrap" style="height:300px"><canvas id="spindelBild"></canvas></div>
+      <button class="btn btn-outline btn-sm no-print" onclick="renderaBildSpindel()" style="margin-top:8px">🔄 Uppdatera diagram</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ SAMMANSTÄLLNING -->
+<div id="page-sammanstallning" class="page">
+
+  <!-- Print-header (dold skärmvisning) -->
+  <div class="print-only">
+    <div class="print-header">NEUROGUIDE LIGHT – Neuropsykologisk rapport</div>
+    <hr class="print-divider">
+    <div id="printHeader" style="font-size:12px;margin-bottom:8px"></div>
+    <hr class="print-divider">
+  </div>
+
+  <div class="page-title no-print">Sammanställning</div>
+  <div class="page-sub no-print">Kombinerad profil och utskrift</div>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="card-header">🕸️ Neuropsykologisk profil</div>
+      <div class="card-body">
+        <div class="chart-wrap"><canvas id="spindelNP2"></canvas></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">🖼️ Bilddiagnostik</div>
+      <div class="card-body">
+        <div class="chart-wrap" style="height:340px"><canvas id="spindelBild2"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">📋 Testresultat</div>
+    <div class="card-body" style="padding:0">
+      <table class="summary-table" id="summaryTable">
+        <thead><tr>
+          <th>Test</th><th>Råpoäng</th><th>Skalpoäng</th><th>T-poäng</th><th>Nivå</th>
+        </tr></thead>
+        <tbody id="summaryTabell"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Manuella kompletteringsfält – syns vid utskrift -->
+  <div class="card" id="manuellKomplettering">
+    <div class="card-header">✏️ Manuella kompletteringar</div>
+    <div class="card-body" style="padding:10px 16px">
+      <table style="border-collapse:collapse;width:100%;font-size:13px">
+        <thead>
+          <tr style="border-bottom:1px solid var(--border)">
+            <th style="text-align:left;padding:4px 8px;color:var(--sub);font-weight:600">Test</th>
+            <th style="text-align:left;padding:4px 8px;color:var(--sub);font-weight:600">Råpoäng / %</th>
+            <th style="text-align:left;padding:4px 8px;color:var(--sub);font-weight:600">Nivå / Kommentar</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="padding:5px 8px;font-weight:500">RAVLT Retention %<br><span style="font-size:10px;color:var(--sub)">(DR ÷ Trial 5 × 100, cutoff ≥80%)</span></td>
+            <td style="padding:5px 8px">
+              <span class="no-print">
+                <input type="number" id="ravlt_ret_manuell" min="0" max="100" step="1"
+                  style="width:70px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-size:13px;background:var(--bg-card);color:var(--text)"
+                  placeholder="0–100">
+                <span style="margin-left:4px;color:var(--sub)">%</span>
+              </span>
+              <span class="print-only" id="ravlt_ret_manuell_print" style="font-size:13px"></span>
+            </td>
+            <td style="padding:5px 8px">
+              <span class="no-print">
+                <input type="text" id="ravlt_ret_kommentar" maxlength="60"
+                  style="width:220px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-size:13px;background:var(--bg-card);color:var(--text)"
+                  placeholder="t.ex. Normalt / Nedsatt">
+              </span>
+              <span class="print-only" id="ravlt_ret_kommentar_print" style="font-size:13px"></span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">🔍 Profiltolkning</div>
+    <div class="card-body">
+      <pre id="summaryProfilText" style="font-family:inherit;font-size:12px;white-space:pre-wrap;color:var(--text-2)">Ingen sammanfattning. Kör profiltolkning på profiltolkningssidan.</pre>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">🖼️ Bilddiagnostik – tolkning</div>
+    <div class="card-body" id="summaryBildTolk">—</div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">🔵 Differentialdiagnostisk profil</div>
+    <div class="card-body">
+      <div style="display:grid;grid-template-columns:1fr 240px;gap:20px;align-items:start">
+        <div class="chart-wrap" style="height:430px"><canvas id="diagnosSpindel"></canvas></div>
+        <div id="diagnosRankPanel" style="padding-top:4px"></div>
+      </div>
+      <div id="diagnosSpindelStatus" style="font-size:11px;color:var(--sub);margin-top:6px;font-style:italic"></div>
+    </div>
+  </div>
+
+  <div class="card no-print">
+    <div class="card-header">🖨️ Utskrift</div>
+    <div class="card-body">
+      <div class="alert alert-info" style="margin-bottom:10px">Uppdatera diagrammen nedan innan utskrift.</div>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="uppdateraSammanstallning()">🔄 Uppdatera sammanställning</button>
+        <button class="btn btn-outline" onclick="window.print()">🖨️ Skriv ut / Spara PDF</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ MATRISANALYS -->
+<div id="page-matris" class="page">
+  <div class="page-title no-print">Matrisanalys</div>
+  <div class="page-sub no-print">Multidimensionell korrelationsanalys – förstärkningseffekter mellan oberoende mått</div>
+
+  <div class="card no-print">
+    <div class="card-header">ℹ️ Om analysen</div>
+    <div class="card-body">
+      <div class="alert alert-info" style="margin-bottom:0">
+        Matrisen identifierar när <b>oberoende test</b> pekar på samma hjärnstruktur.
+        Förstärkningseffekten är starkare än summan av delarna – konvergent bevis från
+        separata mätmodaliteter ökar den diagnostiska säkerheten.
+        Beräkna T-poäng och mata in bilddiagnostik först.
+      </div>
+    </div>
+  </div>
+
+  <!-- Körknapp + status -->
+  <div class="btn-group no-print" style="margin-bottom:14px">
+    <button class="btn btn-primary" onclick="korMatrisAnalys()">🔢 Kör matrisanalys</button>
+    <button class="btn btn-outline" onclick="laddaMatrisHeatmap()">🔄 Ladda korrelationsmatris</button>
+  </div>
+  <div id="matrisStatus"></div>
+
+  <!-- Resultatpanel (dold tills analys körs) -->
+  <div id="matrisResultatPanel" style="display:none">
+
+    <!-- Statistik-chips -->
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+      <div class="card" style="margin:0;padding:12px 18px;min-width:130px;text-align:center">
+        <div style="font-size:11px;color:var(--sub);margin-bottom:2px">Patologiska variabler</div>
+        <div id="statPatol" style="font-size:24px;font-weight:700;color:var(--red)">—</div>
+      </div>
+      <div class="card" style="margin:0;padding:12px 18px;min-width:130px;text-align:center">
+        <div style="font-size:11px;color:var(--sub);margin-bottom:2px">Förstärkningspar</div>
+        <div id="statPar" style="font-size:24px;font-weight:700;color:var(--orange)">—</div>
+      </div>
+      <div class="card" style="margin:0;padding:12px 18px;flex:1;min-width:220px">
+        <div style="font-size:11px;color:var(--sub);margin-bottom:4px">Diagnosindikation (matrisbaserad)</div>
+        <div id="statDiagnos" style="font-size:12px;font-weight:500"></div>
+      </div>
+    </div>
+
+    <!-- Textsammanfattning -->
+    <div class="card">
+      <div class="card-header">📝 Matrissammanfattning</div>
+      <div class="card-body">
+        <pre id="matrisText" style="font-family:inherit;font-size:12px;white-space:pre-wrap;color:var(--text-2)"></pre>
+      </div>
+    </div>
+
+    <!-- Förstärkningspar -->
+    <div class="card">
+      <div class="card-header">⚡ Förstärkningspar – konvergent bevis</div>
+      <div class="card-body" id="forstarkningsPanelen"></div>
+    </div>
+
+    <!-- Hjärnstruktur-aktivering -->
+    <div class="card">
+      <div class="card-header">🧠 Hjärnstruktur-aktivering</div>
+      <div class="card-body" id="aktiveringsBars"></div>
+    </div>
+
+    <!-- Spindel med matris-lager -->
+    <div class="card">
+      <div class="card-header">🕸️ T-poäng med matrisförstärkning (lager 3 = konvergent signal)</div>
+      <div class="card-body">
+        <div class="chart-wrap"><canvas id="spindelMatris"></canvas></div>
+        <div style="font-size:11px;color:var(--sub);margin-top:6px">
+          Blå = uppmätt T-poäng · Röd streck = T=40 · Lila = matrisförstärkt signal
+        </div>
+      </div>
+    </div>
+
+    <!-- Förstärkningsnätverk -->
+    <div class="card">
+      <div class="card-header">🕸️ Förstärkningsnätverk – patologiska variabler</div>
+      <div class="card-body">
+        <canvas id="natverkCanvas" width="700" height="420" style="max-width:100%;border-radius:8px;background:#0f0f1a"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3D Topologi -->
+  <div class="card">
+    <div class="card-header">🏔️ Topologisk 3D-vy – korrelationslandskap</div>
+    <div class="card-body" style="padding:10px">
+      <div style="font-size:11px;color:var(--sub);margin-bottom:8px">
+        Dra för att rotera · Scroll för zoom · Peka på en röd topp för variabelinfo
+      </div>
+      <div id="topo3DContainer" style="width:100%;height:480px;border-radius:8px;overflow:hidden;background:#0a0a1a;cursor:grab;position:relative"></div>
+      <div id="topo3DTooltip" style="position:fixed;background:rgba(8,8,24,0.96);color:#e8eaed;font-size:12px;padding:10px 14px;border-radius:9px;pointer-events:none;display:none;max-width:280px;z-index:9999;border:1px solid rgba(233,69,96,0.4);line-height:1.55;box-shadow:0 4px 20px rgba(0,0,0,0.6)"></div>
+      <div style="margin-top:8px;font-size:11px;color:var(--sub)">
+        <b>Axlar:</b>
+        <span id="topoAxisLegend" style="margin-left:6px"></span>
+      </div>
+      <div class="btn-group no-print" style="margin-top:8px">
+        <button class="btn btn-outline btn-sm" onclick="laddaTopo3D()">🔄 Ladda / Uppdatera 3D</button>
+        <button class="btn btn-outline btn-sm" onclick="aterstallKamera()">⊙ Återställ kamera</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Korrelationsmatris (heatmap) – alltid synlig -->
+  <div class="card">
+    <div class="card-header">🗂️ Korrelationsmatris (heatmap) – N×N vikter</div>
+    <div class="card-body" style="overflow-x:auto">
+      <div id="heatmapTooltip" style="position:fixed;background:rgba(10,10,30,0.92);color:#fff;font-size:11px;padding:7px 11px;border-radius:7px;pointer-events:none;display:none;max-width:280px;z-index:999;line-height:1.5"></div>
+      <canvas id="matrisHeatmap" style="display:block;cursor:crosshair"></canvas>
+      <div style="margin-top:8px;font-size:11px;color:var(--sub);display:flex;gap:16px;flex-wrap:wrap">
+        <span>Skala: </span>
+        <span style="color:#e94560">■ 8–10 stark</span>
+        <span style="color:#533483">■ 6–8</span>
+        <span style="color:#0f3460">■ 4–6</span>
+        <span style="color:#16213e">■ 2–4</span>
+        <span style="color:#1a1a2e">■ 0–2 svag</span>
+        <span style="color:#f5c842">■ Diagonal = lokalisation</span>
+        <span style="color:#fff">■ Vit glöd = båda patologiska</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ DIAGNOSMATRIS -->
+<div id="page-diagnos" class="page">
+  <div class="page-title no-print">Diagnosmatris</div>
+  <div class="page-sub no-print">17 demenssjukdomar × 23 neuropsykologiska variabler – viktat via hjärnregioner</div>
+
+  <div class="btn-group no-print" style="margin-bottom:14px">
+    <button class="btn btn-primary" onclick="laddaDiagnosMatris()">📊 Ladda matris</button>
+    <button class="btn btn-outline" onclick="korDiagnosMatchning()">🔬 Matcha patient</button>
+  </div>
+  <div id="diagnosStatus"></div>
+
+  <!-- Matchningsresultat -->
+  <div id="diagnosMatchPanel" style="display:none">
+    <div class="two-col" style="margin-bottom:14px">
+      <div class="card" style="margin:0">
+        <div class="card-header">🏆 Differentialdiagnos – topp matchning</div>
+        <div class="card-body" style="padding:0">
+          <table class="summary-table" id="diagnosDDTabell">
+            <thead><tr><th>#</th><th>Sjukdom</th><th>Kategori</th><th>Matchning</th></tr></thead>
+            <tbody id="diagnosDDBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card" style="margin:0">
+        <div class="card-header">📊 Matchning – stapeldiagram</div>
+        <div class="card-body" id="diagnosBarPanel" style="max-height:340px;overflow-y:auto"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">🕸️ Differentialdiagnos – spindeldiagram</div>
+      <div class="card-body">
+        <div class="chart-wrap" style="height:420px"><canvas id="diagnosSpindel"></canvas></div>
+        <div style="font-size:11px;color:var(--sub);margin-top:6px">
+          Axlarna representerar de 17 demenssjukdomarna. Värdet = matchningsprocent (0–100%).
+          Referenslinje vid 20% (kliniskt relevant tröskel).
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">📝 Klinisk profiltolkning</div>
+      <div class="card-body" id="diagnosProfilText" style="font-size:12px;color:var(--text-2);line-height:1.7"></div>
+    </div>
+  </div>
+
+  <!-- Heatmap -->
+  <div class="card">
+    <div class="card-header">🗂️ Diagnosmatris – heatmap (sjukdomar × tester)</div>
+    <div class="card-body" style="overflow-x:auto;padding:10px">
+      <div id="diagnosHeatmapTooltip" style="position:fixed;background:rgba(5,5,20,0.95);color:#e8eaed;font-size:11px;padding:9px 13px;border-radius:8px;pointer-events:none;display:none;max-width:300px;z-index:9999;border:1px solid rgba(80,120,255,0.35);box-shadow:0 4px 20px rgba(0,0,0,0.6);line-height:1.55"></div>
+      <canvas id="diagnosHeatmapCanvas" style="display:block;cursor:crosshair"></canvas>
+      <div style="margin-top:8px;font-size:11px;color:var(--sub);display:flex;gap:14px;flex-wrap:wrap">
+        <span>Vikt: </span>
+        <span style="color:#e94560">■ 8–10 stark koppling</span>
+        <span style="color:#533483">■ 5–8</span>
+        <span style="color:#0f3460">■ 2–5</span>
+        <span style="color:#1a1a2e">■ 0–2 svag</span>
+        <span style="color:#fff;text-shadow:0 0 4px #fff">■ Vit glöd = patient aktiverad</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+</main>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// GLOBALT STATE
+// ═══════════════════════════════════════════════════════════════
+let gTestRes = {};
+let gMonster = [];
+let gSammanfattning = '';
+let spindelNPChart = null, spindelBildChart = null;
+let spindelNP2Chart = null, spindelBild2Chart = null;
+
+const FIELD_LIMITS = {
+  ravlt_trial: {min:0, max:15, label:'RAVLT-försök'},
+  bvmt_trial:  {min:0, max:12, label:'BVMT-försök'},
+  rcft:        {min:0, max:36, label:'RCFT'},
+  block:       {min:0, max:66, label:'Blockmönster'},
+  lik:         {min:0, max:36, label:'Likheter'},
+  info:        {min:0, max:26, label:'Information'},
+  kod:         {min:0, max:135, label:'Kodning'},
+  tmt:         {min:1, max:999, label:'TMT (sek)'},
+  mta:         {min:0, max:4,  label:'MTA'},
+  gca:         {min:0, max:3,  label:'GCA/Koedam/Fazekas'},
+};
+
+// ═══════════════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════════════
+function visaSida(sid) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + sid).classList.add('active');
+  const navItems = document.querySelectorAll('.nav-item');
+  const sidMap = {patient:0, test:1, profil:2, bild:3, sammanstallning:4, matris:5, diagnos:6};
+  if (sidMap[sid] !== undefined) navItems[sidMap[sid]].classList.add('active');
+  if (sid === 'sammanstallning') uppdateraSammanstallning();
+  if (sid === 'profil') { renderaSpindelNP(spindelNPChart, 'spindelNP'); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ÅLDERSBERÄKNING (borttagen – ålder anges direkt)
+// ═══════════════════════════════════════════════════════════════
+
+function uppdateraPatientBar() {
+  const pid = document.getElementById('p_id').value;
+  const alder = document.getElementById('p_alder').value;
+  const kon = document.getElementById('p_kon').value;
+  const bar = document.getElementById('patientBar');
+  if (pid) {
+    bar.style.display = 'flex';
+    document.getElementById('patientIdBadge').textContent = pid;
+    document.getElementById('patientInfoText').textContent =
+      [alder ? alder+' år' : '', kon].filter(Boolean).join(' · ') || 'Uppgifter saknas';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// VALIDERING
+// ═══════════════════════════════════════════════════════════════
+let bubbleEl = null;
+function valideraFalt(el) {
+  if (bubbleEl) { bubbleEl.remove(); bubbleEl = null; }
+  const key = el.dataset.validate;
+  if (!key || !FIELD_LIMITS[key]) return true;
+  const lim = FIELD_LIMITS[key];
+  const v = parseFloat(el.value);
+  if (el.value === '') { el.classList.remove('invalid'); return true; }
+  if (isNaN(v) || v < lim.min || v > lim.max) {
+    el.classList.add('invalid');
+    bubbleEl = document.createElement('div');
+    bubbleEl.className = 'val-bubble';
+    bubbleEl.textContent = `${lim.label}: ${lim.min}–${lim.max}`;
+    el.parentElement.style.position = 'relative';
+    el.parentElement.appendChild(bubbleEl);
+    const rect = el.getBoundingClientRect();
+    bubbleEl.style.top = (el.offsetTop - 32) + 'px';
+    bubbleEl.style.left = el.offsetLeft + 'px';
+    setTimeout(() => { if (bubbleEl) { bubbleEl.remove(); bubbleEl = null; } }, 3000);
+    return false;
+  }
+  el.classList.remove('invalid');
+  return true;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// BERÄKNA T-POÄNG
+// ═══════════════════════════════════════════════════════════════
+async function berakna() {
+  const alder = parseInt(document.getElementById('p_alder').value) || 70;
+  const kon = document.getElementById('p_kon').value;
+  const utb = document.getElementById('p_utb').value;
+
+  const get = id => { const el=document.getElementById(id); return el&&el.value!==''?el.value:null; };
+
+  const data = {
+    alder, kon, utb,
+    ravlt_1:get('ravlt_1'), ravlt_2:get('ravlt_2'), ravlt_3:get('ravlt_3'),
+    ravlt_4:get('ravlt_4'), ravlt_5:get('ravlt_5'),
+    ravlt_dr:get('ravlt_dr'), ravlt_dist:get('ravlt_dist'),
+    ravlt_rek_sp:get('ravlt_rek_sp'), ravlt_rek_fp:get('ravlt_rek_fp'),
+    bvmt_1:get('bvmt_1'), bvmt_2:get('bvmt_2'), bvmt_3:get('bvmt_3'),
+    bvmt_dr:get('bvmt_dr'), bvmt_rek_sp:get('bvmt_rek_sp'), bvmt_rek_fp:get('bvmt_rek_fp'),
+    rcft_kop:get('rcft_kop'), rcft_3min:get('rcft_3min'), rcft_30min:get('rcft_30min'),
+    rcft_rek_sp:get('rcft_rek_sp'), rcft_rek_fp:get('rcft_rek_fp'),
+    siff_fram:get('siff_fram'), siff_bak:get('siff_bak'), siff_ordning:get('siff_ordning'),
+    info_raw:get('info_raw'), lik_raw:get('lik_raw'), block_raw:get('block_raw'), kod_raw:get('kod_raw'),
+    tmt_a:get('tmt_a'), tmt_b:get('tmt_b'),
+    fas_f:get('fas_f'), fas_a:get('fas_a'), fas_s:get('fas_s'), djur:get('djur'),
+    utb_flode:document.getElementById('utb_flode').value,
+    klocka_rita:get('klocka_rita'), klocka_avlasa:get('klocka_avlasa'),
+  };
+
+  try {
+    const resp = await fetch('/berakna', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
+    const res = await resp.json();
+    gTestRes = res;
+
+    // TMT B/A-kvot
+    if (res.tmt_ba_kvot !== undefined) {
+      document.getElementById('tmt_ba_kvot_display').value = res.tmt_ba_kvot;
+    }
+
+    // Klocktest-tolkning
+    tolkaBildKlocka();
+
+    // Rendera resultattabell
+    const rows = byggResultatRader(res);
+    document.getElementById('resultatTabell').innerHTML = rows;
+    document.getElementById('resultatKort').style.display = 'block';
+
+    // Rendera spindel
+    renderaSpindelNP(spindelNPChart, 'spindelNP');
+
+  } catch(e) {
+    alert('Fel vid beräkning: ' + e.message);
+  }
+}
+
+function byggResultatRader(res) {
+  const tests = [
+    {lbl:'RAVLT Trial 1–5 total', raw:res.ravlt_total, skalp:null, t:res.ravlt_total_t, color:res.ravlt_total_color, label:res.ravlt_total_label},
+    {lbl:'RAVLT fördröjd ÅG', raw:res.ravlt_dr, skalp:null, t:res.ravlt_dr_t, color:res.ravlt_dr_color, label:res.ravlt_dr_label},
+    ...(res.ravlt_retention_pct !== undefined ? [{lbl:'RAVLT Retention % (DR/T5)', raw:res.ravlt_retention_pct + ' %', skalp:null, t:null, color:res.ravlt_retention_ok?'green':'orange', label:res.ravlt_retention_ok?'✅ Normalt ≥80%':'⚠️ Nedsatt <80%'}] : []),
+    {lbl:'BVMT-R total', raw:res.bvmt_total, skalp:null, t:res.bvmt_total_t, color:res.bvmt_total_color, label:res.bvmt_total_label},
+    {lbl:'BVMT-R fördröjd ÅG', raw:res.bvmt_dr, skalp:null, t:res.bvmt_dr_t, color:res.bvmt_dr_color, label:res.bvmt_dr_label},
+    ...(res.bvmt_retention_pct !== undefined ? [{lbl:'BVMT-R Retention % (DR/T3)', raw:res.bvmt_retention_pct + ' %', skalp:null, t:null, color:res.bvmt_retention_ok?'green':'orange', label:res.bvmt_retention_ok?'✅ Normalt ≥70%':'⚠️ Nedsatt <70%'}] : []),
+    ...(res.bvmt_learning_index !== undefined ? [{lbl:'BVMT-R Inlärningsindex (T3−T1)', raw:res.bvmt_learning_index, skalp:null, t:null, color:res.bvmt_learning_ok?'green':'yellow', label:res.bvmt_learning_ok?'✅ Normal kurva ≥3':'⚠️ Planare kurva <3'}] : []),
+    ...(res.bvmt_rek_index !== undefined ? [{lbl:'BVMT-R Igenkänning Index (H−FA)', raw:res.bvmt_rek_index, skalp:null, t:null, color:res.bvmt_rek_index_ok?'green':'orange', label:res.bvmt_rek_index_ok?'✅ Normalt ≥9':'⚠️ Under referens <9'}] : []),
+    {lbl:'RCFT kopia', raw:res.rcft_kop, skalp:null, t:res.rcft_kop_t, color:res.rcft_kop_color, label:res.rcft_kop_label},
+    {lbl:'RCFT omedelbar ÅG', raw:res.rcft_3min, skalp:null, t:res.rcft_3min_t, color:res.rcft_3min_color, label:res.rcft_3min_label},
+    {lbl:'RCFT fördröjd ÅG', raw:res.rcft_30min, skalp:null, t:res.rcft_30min_t, color:res.rcft_30min_color, label:res.rcft_30min_label},
+    {lbl:'Blockmönster', raw:res.block_raw, skalp:res.block_skalp, t:res.block_t, color:res.block_color, label:res.block_label},
+    {lbl:'Likheter', raw:res.lik_raw, skalp:res.lik_skalp, t:res.lik_t, color:res.lik_color, label:res.lik_label},
+    {lbl:'Information', raw:res.info_raw, skalp:res.info_skalp, t:res.info_t, color:res.info_color, label:res.info_label},
+    {lbl:'Kodning', raw:res.kod_raw, skalp:res.kod_skalp, t:res.kod_t, color:res.kod_color, label:res.kod_label},
+    {lbl:'Sifferrepetition', raw:res.siff_raw_total, skalp:res.siff_skalp, t:res.siff_t, color:res.siff_color, label:res.siff_label},
+    {lbl:'TMT-A (sek)', raw:res.tmt_a, skalp:res.tmt_a_ss, t:res.tmt_a_t, color:res.tmt_a_color, label:res.tmt_a_label},
+    {lbl:'TMT-B (sek)', raw:res.tmt_b, skalp:res.tmt_b_ss, t:res.tmt_b_t, color:res.tmt_b_color, label:res.tmt_b_label},
+    {lbl:'TMT B/A-kvot', raw:res.tmt_ba_kvot, skalp:null, t:null, color: res.tmt_ba_kvot>3?'orange':'green', label: res.tmt_ba_kvot>3?'Klinisk markör':'OK'},
+    {lbl:'FAS total', raw:res.fas, skalp:null, t:res.fas_t, color:res.fas_color, label:res.fas_label},
+    {lbl:'Djurnamn', raw:res.djur, skalp:null, t:res.djur_t, color:res.djur_color, label:res.djur_label},
+  ];
+  return tests.filter(r => r.raw !== undefined && r.raw !== null).map(r => `
+    <tr>
+      <td>${r.lbl}</td>
+      <td>${r.raw !== null && r.raw !== undefined ? r.raw : '—'}</td>
+      <td>${r.skalp !== null && r.skalp !== undefined ? r.skalp : '—'}</td>
+      <td><b>${r.t !== null && r.t !== undefined ? r.t : '—'}</b></td>
+      <td><span class="rc ${r.color||'gray'}">${r.label||'—'}</span></td>
+    </tr>`).join('');
+}
+
+function rensaTest() {
+  ['ravlt_1','ravlt_2','ravlt_3','ravlt_4','ravlt_5','ravlt_dr','ravlt_dist','ravlt_rek_sp','ravlt_rek_fp',
+   'bvmt_1','bvmt_2','bvmt_3','bvmt_dr','bvmt_rek_sp','bvmt_rek_fp',
+   'rcft_kop','rcft_3min','rcft_30min','rcft_rek_sp','rcft_rek_fp',
+   'block_raw','lik_raw','info_raw','kod_raw','siff_fram','siff_bak','siff_ordning',
+   'tmt_a','tmt_b','fas_f','fas_a','fas_s','djur','klocka_rita','klocka_avlasa'
+  ].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  gTestRes = {};
+  document.getElementById('resultatKort').style.display='none';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// KLOCKTEST-TOLKNING
+// ═══════════════════════════════════════════════════════════════
+function tolkaBildKlocka() {
+  const sys = document.getElementById('klocka_system').value;
+  const rita = parseFloat(document.getElementById('klocka_rita').value);
+  if (isNaN(rita)) { document.getElementById('klockaTolkning').textContent=''; return; }
+  let text = '';
+  if (sys === 'shulman') {
+    if (rita >= 4) text = '✅ Normalt (Shulman ≥4)';
+    else if (rita === 3) text = '⚠️ Minimal felbedömning (Shulman 3)';
+    else if (rita <= 2) text = '🔴 Patologiskt (Shulman ≤2)';
+  } else {
+    if (rita >= 8) text = '✅ Normalt (Rouleau ≥8)';
+    else if (rita >= 6) text = '⚠️ Gränsvärde (Rouleau 6–7)';
+    else text = '🔴 Patologiskt (Rouleau ≤5)';
+  }
+  document.getElementById('klockaTolkning').textContent = text;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// BILDDIAGNOSTIK TOLKNING
+// ═══════════════════════════════════════════════════════════════
+function tolkaBild() {
+  const get = id => { const v=parseFloat(document.getElementById(id).value); return isNaN(v)?null:v; };
+  const mta_h=get('mta_h'), mta_v=get('mta_v'), gca=get('gca'), koe=get('koedam'), faz=get('fazekas');
+  const varningar = [];
+  if (mta_h !== null && mta_h >= 2) varningar.push(`<span class="bild-warn">MTA höger ≥2: Signifikant hippocampal atrofi (Scheltens)</span>`);
+  if (mta_v !== null && mta_v >= 2) varningar.push(`<span class="bild-warn">MTA vänster ≥2: Signifikant hippocampal atrofi (Scheltens)</span>`);
+  if (gca !== null && gca >= 2) varningar.push(`<span class="bild-warn">GCA ≥2: Måttlig-uttalad global kortikal atrofi</span>`);
+  if (koe !== null && koe >= 2) varningar.push(`<span class="bild-warn">Koedam ≥2: Påtaglig parietal atrofi (DLB-mönster?)</span>`);
+  if (faz !== null && faz >= 2) varningar.push(`<span class="bild-warn">Fazekas ≥2: Måttlig-uttalad vitsubstanspåverkan</span>`);
+
+  const panel = document.getElementById('bildTolkPanel');
+  const text = document.getElementById('bildTolkText');
+  if (varningar.length > 0) {
+    panel.style.display='block';
+    text.innerHTML = varningar.join('<br>');
+  } else {
+    panel.style.display='none';
+  }
+
+  // Spegla i bildspindel
+  renderaBildSpindel();
+  // Spegla i sammanfattning
+  document.getElementById('summaryBildTolk').innerHTML = varningar.length > 0 ? varningar.join('<br>') : '✅ Inga varningsvärden påvisade.';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PROFILTOLKNING
+// ═══════════════════════════════════════════════════════════════
+async function korProfiltolkning() {
+  if (!gTestRes || Object.keys(gTestRes).length === 0) {
+    alert('Beräkna T-poäng på testsidan först.');
+    return;
+  }
+  try {
+    const resp = await fetch('/profiltolkning', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(gTestRes)});
+    const data = await resp.json();
+    gMonster = data.monster;
+    gSammanfattning = data.sammanfattning;
+
+    // Visa mönster
+    let html = '';
+    if (data.monster && data.monster.length > 0) {
+      data.monster.slice(0,3).forEach(m => {
+        html += `<div style="margin-bottom:12px;padding:10px;border-radius:8px;background:var(--gray-lt);border:1px solid var(--border)">
+          <div style="font-weight:600;font-size:13px">${m.namn} <span style="font-size:11px;color:var(--sub)">(styrka: ${m.styrka})</span></div>
+          <div style="font-size:12px;color:var(--text-2);margin-top:4px">${m.kommentar}</div>
+          ${m.diagnoser&&m.diagnoser.length?`<div style="font-size:11px;color:var(--sub);margin-top:4px">DD: ${m.diagnoser.join(', ')}</div>`:''}
+        </div>`;
+      });
+    }
+    html += `<button class="btn btn-outline btn-sm no-print" onclick="korProfiltolkning()" style="margin-top:4px">🔄 Kör igen</button>`;
+    document.getElementById('monsterPanel').innerHTML = html;
+    document.getElementById('profilText').textContent = data.sammanfattning;
+    document.getElementById('summaryProfilText').textContent = data.sammanfattning;
+
+    renderaSpindelNP(spindelNPChart, 'spindelNP');
+  } catch(e) {
+    alert('Fel vid profiltolkning: ' + e.message);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SPINDELDIAGRAM – NEUROPSYKOLOGI
+// ═══════════════════════════════════════════════════════════════
+function spindelData(res) {
+  // TMT: inverterat (högt T = snabb = bra)
+  return [
+    {lbl:'RAVLT total', t: res.ravlt_total_t},
+    {lbl:'RAVLT fördröjd', t: res.ravlt_dr_t},
+    {lbl:'BVMT-R total', t: res.bvmt_total_t},
+    {lbl:'BVMT-R fördröjd', t: res.bvmt_dr_t},
+    {lbl:'RCFT fördröjd', t: res.rcft_30min_t},
+    {lbl:'TMT-A (inv.)', t: res.tmt_a_t},
+    {lbl:'TMT-B (inv.)', t: res.tmt_b_t},
+    {lbl:'Blockmönster', t: res.block_t},
+    {lbl:'Kodning', t: res.kod_t},
+    {lbl:'Sifferrep.', t: res.siff_t},
+    {lbl:'FAS', t: res.fas_t},
+    {lbl:'Djurnamn', t: res.djur_t},
+    {lbl:'Likheter', t: res.lik_t},
+    {lbl:'Information', t: res.info_t},
+  ];
+}
+
+function renderaSpindelNP(existingChart, canvasId) {
+  const sd = spindelData(gTestRes);
+  const labels = sd.map(x => x.lbl);
+  const vals = sd.map(x => x.t !== undefined && x.t !== null ? x.t : null);
+
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+
+  if (existingChart) existingChart.destroy();
+
+  const newChart = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Patient',
+          data: vals,
+          backgroundColor: 'rgba(74,124,247,0.15)',
+          borderColor: '#4a7cf7',
+          borderWidth: 2,
+          pointBackgroundColor: vals.map(v => v <= 35 ? '#f25c54' : v <= 40 ? '#f5c842' : '#3ecf8e'),
+          pointRadius: 4,
+        },
+        {
+          label: 'T=40 (gräns)',
+          data: Array(labels.length).fill(40),
+          borderColor: '#9ba3af',
+          borderWidth: 1,
+          borderDash: [4,4],
+          backgroundColor: 'transparent',
+          pointRadius: 0,
+        },
+        {
+          label: 'T=35 (patologi)',
+          data: Array(labels.length).fill(35),
+          borderColor: '#f25c54',
+          borderWidth: 1,
+          borderDash: [2,2],
+          backgroundColor: 'transparent',
+          pointRadius: 0,
+        }
+      ]
+    },
+    options: {
+      scales: { r: { min: 20, max: 80, ticks: { stepSize: 10, font:{size:9} }, pointLabels:{font:{size:10}} } },
+      plugins: { legend: { position:'bottom', labels:{font:{size:11}} } },
+      responsive: true, maintainAspectRatio: false
+    }
+  });
+
+  if (canvasId === 'spindelNP') spindelNPChart = newChart;
+  else if (canvasId === 'spindelNP2') spindelNP2Chart = newChart;
+  return newChart;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SPINDELDIAGRAM – BILDDIAGNOSTIK
+// ═══════════════════════════════════════════════════════════════
+function renderaBildSpindel() {
+  const get = id => { const v=parseFloat(document.getElementById(id).value); return isNaN(v)?null:v; };
+  const mta_h=get('mta_h'), mta_v=get('mta_v'), gca=get('gca'), koe=get('koedam'), faz=get('fazekas');
+
+  // Normalisera 0–100%
+  const norm = (v, max) => v !== null ? Math.round((v/max)*100) : 0;
+  const vals = [
+    norm(mta_h, 4), norm(mta_v, 4), norm(gca, 3), norm(koe, 3), norm(faz, 3)
+  ];
+  const labels = ['MTA höger','MTA vänster','GCA','Koedam','Fazekas'];
+
+  [['spindelBild', 'spindelBildChart'], ['spindelBild2', 'spindelBild2Chart']].forEach(([cid, varName]) => {
+    const ctx = document.getElementById(cid);
+    if (!ctx) return;
+    if (window[varName]) window[varName].destroy();
+
+    const col = v => v >= 67 ? 'rgba(242,92,84,0.7)' : v >= 33 ? 'rgba(247,146,74,0.7)' : 'rgba(62,207,142,0.7)';
+
+    window[varName] = new Chart(ctx, {
+      type: 'radar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Bilddiagnostik (%)',
+          data: vals,
+          backgroundColor: 'rgba(99,102,241,0.15)',
+          borderColor: '#6366f1',
+          borderWidth: 2,
+          pointBackgroundColor: vals.map(col),
+          pointRadius: 5,
+        }]
+      },
+      options: {
+        scales: { r: { min: 0, max: 100, ticks:{stepSize:25,callback:v=>v+'%',font:{size:9}}, pointLabels:{font:{size:10}} } },
+        plugins: { legend:{position:'bottom',labels:{font:{size:11}}} },
+        responsive:true, maintainAspectRatio:false
+      }
+    });
+  });
+}
+
+// Gör variabler globalt tillgängliga för diagramreferenser
+window.spindelBildChart = null;
+window.spindelBild2Chart = null;
+
+// ═══════════════════════════════════════════════════════════════
+// SAMMANSTÄLLNING
+// ═══════════════════════════════════════════════════════════════
+// ─── DIFFERENTIALDIAGNOSTISK SPINDELDIAGRAM ──────────────────────────────────
+
+const _DIAG_INFO = {
+  'AD':        { kort: 'AD',         kat: '#4a7cf7', fullnamn: 'Alzheimers sjukdom' },
+  'AD_post':   { kort: 'AD post.',   kat: '#7ca5f7', fullnamn: 'Bakre kortikal atrofi (AD)' },
+  'DLB':       { kort: 'DLB',        kat: '#a855f7', fullnamn: 'Lewykroppsdemens' },
+  'PDD':       { kort: 'PDD',        kat: '#c084fc', fullnamn: 'Parkinson med demens' },
+  'bvFTD':     { kort: 'bvFTD',      kat: '#f7924a', fullnamn: 'FTD – beteendevariant' },
+  'svPPA':     { kort: 'svPPA',      kat: '#fb923c', fullnamn: 'Semantisk demens' },
+  'nfvPPA':    { kort: 'nfvPPA',     kat: '#fdba74', fullnamn: 'PPA icke-flytande' },
+  'lvPPA':     { kort: 'lvPPA',      kat: '#7ca5f7', fullnamn: 'PPA logopenisk' },
+  'VaD_sub':   { kort: 'VaD sub.',   kat: '#06b6d4', fullnamn: 'Vaskulär – subkortikal' },
+  'VaD_multi': { kort: 'VaD multi.', kat: '#22d3ee', fullnamn: 'Vaskulär – multiinfarkt' },
+  'PSP_R':     { kort: 'PSP',        kat: '#f5c842', fullnamn: 'Progressiv supranukleär pares' },
+  'CBS':       { kort: 'CBS',        kat: '#fde047', fullnamn: 'Kortikobasal degeneration' },
+  'MSA_P':     { kort: 'MSA',        kat: '#eab308', fullnamn: 'Multipel systematrofi' },
+  'FTD_MND':   { kort: 'FTD+ALS',   kat: '#fb923c', fullnamn: 'FTD med motorneurosjukdom' },
+  'NPH':       { kort: 'NPH',        kat: '#9ba3af', fullnamn: 'Normaltrykkshydrocefalus' },
+  'CJD':       { kort: 'CJD',        kat: '#ef4444', fullnamn: 'Creutzfeldt-Jakob' },
+  'Mixed':     { kort: 'Blandad',    kat: '#3ecf8e', fullnamn: 'Blandad demens (AD+VaD)' },
+};
+
+let diagnosSpindelChart = null;
+
+function ritaDiagnosSpindel(scores) {
+  const canvas = document.getElementById('diagnosSpindel');
+  if (!canvas || !scores) return;
+
+  const keys   = Object.keys(_DIAG_INFO);
+  const labels = keys.map(k => _DIAG_INFO[k].kort);
+  const data   = keys.map(k => scores[k] || 0);
+  const maxScore = Math.max(...data, 1);
+
+  // Dominant färg = topdiagnos
+  const topIdx = data.indexOf(maxScore);
+  const domCol = _DIAG_INFO[keys[topIdx]]?.kat || '#4a7cf7';
+
+  // Punktfärger: starkare om hög matchning
+  const ptColors = keys.map(k => {
+    const v = scores[k] || 0;
+    return v >= 30 ? _DIAG_INFO[k].kat : 'rgba(155,163,175,0.5)';
+  });
+  const ptRadius = data.map(v => v >= 30 ? 5 : v >= 15 ? 3 : 2);
+
+  if (diagnosSpindelChart) diagnosSpindelChart.destroy();
+  diagnosSpindelChart = new Chart(canvas, {
+    type: 'radar',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Matchning (%)',
+          data,
+          backgroundColor: domCol + '28',
+          borderColor: domCol,
+          borderWidth: 2,
+          pointRadius: ptRadius,
+          pointBackgroundColor: ptColors,
+          pointBorderColor: '#fff',
+          pointBorderWidth: 1,
+        },
+        {
+          label: '20%-nivå',
+          data: Array(keys.length).fill(20),
+          borderColor: 'rgba(155,163,175,0.25)',
+          borderWidth: 1,
+          borderDash: [4, 4],
+          backgroundColor: 'transparent',
+          pointRadius: 0,
+        },
+      ],
+    },
+    options: {
+      scales: {
+        r: {
+          min: 0, max: 100,
+          ticks: {
+            stepSize: 25,
+            font: { size: 8 },
+            color: 'rgba(155,163,175,0.7)',
+            backdropColor: 'transparent',
+          },
+          pointLabels: {
+            font: { size: 9.5 },
+            color: keys.map(k => {
+              const v = scores[k] || 0;
+              return v >= 30 ? _DIAG_INFO[k].kat : 'rgba(155,163,175,0.65)';
+            }),
+          },
+          grid:        { color: 'rgba(255,255,255,0.07)' },
+          angleLines:  { color: 'rgba(255,255,255,0.07)' },
+        },
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: ctx => _DIAG_INFO[keys[ctx[0].dataIndex]]?.fullnamn || labels[ctx[0].dataIndex],
+            label: ctx => ` Matchning: ${ctx.parsed.r.toFixed(1)}%`,
+          },
+        },
+      },
+      responsive: true,
+      maintainAspectRatio: false,
+    },
+  });
+
+  // Rankningspanel
+  const rankEl = document.getElementById('diagnosRankPanel');
+  if (!rankEl) return;
+  const ranked = keys
+    .map((k, i) => ({ k, score: data[i] }))
+    .filter(d => d.score > 0)
+    .sort((a, b) => b.score - a.score);
+
+  rankEl.innerHTML = `
+    <div style="font-size:10px;font-weight:700;color:var(--sub);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.6px">Rangordning</div>
+    ${ranked.slice(0, 12).map((d, i) => {
+      const info = _DIAG_INFO[d.k];
+      const stark = d.score >= 30;
+      return `
+        <div style="margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;font-size:11.5px;margin-bottom:2px">
+            <span style="color:${stark ? info.kat : 'var(--text-2)'};font-weight:${stark ? 700 : 400}">${i+1}. ${info.kort}</span>
+            <span style="color:${stark ? info.kat : 'var(--sub)'};font-weight:600;font-size:12px">${d.score}%</span>
+          </div>
+          <div style="height:3px;background:var(--border);border-radius:2px;overflow:hidden">
+            <div style="width:${d.score}%;height:100%;background:${info.kat};border-radius:2px;opacity:${stark?1:0.4}"></div>
+          </div>
+        </div>`;
+    }).join('')}
+  `;
+}
+
+async function uppdateraSammanstallning() {
+  // Uppdatera tabellen
+  const rows = byggResultatRader(gTestRes);
+  document.getElementById('summaryTabell').innerHTML = rows;
+
+  // Uppdatera profiltolkning
+  if (gSammanfattning) {
+    document.getElementById('summaryProfilText').textContent = gSammanfattning;
+  }
+
+  // Rendera spindlar
+  if (spindelNP2Chart) { spindelNP2Chart.destroy(); spindelNP2Chart = null; }
+  spindelNP2Chart = renderaSpindelNP(null, 'spindelNP2');
+  renderaBildSpindel();
+
+  // Print-header
+  const pid = document.getElementById('p_id').value;
+  const alder = document.getElementById('p_alder').value;
+  const datum = document.getElementById('p_datum').value;
+  const testledare = document.getElementById('p_testledare').value;
+  const utb = document.getElementById('p_utb').value;
+  document.getElementById('printHeader').innerHTML =
+    `Patient: <b>${pid||'—'}</b> &nbsp; Ålder: <b>${alder||'—'}</b> år &nbsp; Datum: <b>${datum||'—'}</b> &nbsp; Testledare: <b>${testledare||'—'}</b> &nbsp; Utbildning: <b>${utb||'—'}</b> år`;
+
+  // Tolkningspanel
+  tolkaBild();
+
+  // ─── Differentialdiagnos-spindel ────────────────────────────────────────────
+  const statusEl = document.getElementById('diagnosSpindelStatus');
+  if (!gTestRes || Object.keys(gTestRes).length === 0) {
+    if (statusEl) statusEl.textContent = 'Beräkna T-poäng på testsidan för att se differentialdiagnos-profilen.';
+    return;
+  }
+  try {
+    const get = id => { const el = document.getElementById(id); return el && el.value !== '' ? parseFloat(el.value) : null; };
+    const bilddiagnostik = {
+      mta_h: get('mta_h'), mta_v: get('mta_v'),
+      gca: get('gca'), koedam: get('koedam'), fazekas: get('fazekas'),
+    };
+    const resp = await fetch('/diagnos_matris_analys', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tscorer: gTestRes, bilddiagnostik }),
+    });
+    const data = await resp.json();
+    ritaDiagnosSpindel(data.scores);
+    const topDiag = Object.entries(data.scores || {}).sort((a,b) => b[1]-a[1])[0];
+    if (statusEl) statusEl.textContent = topDiag && topDiag[1] > 0
+      ? `Starkast matchning: ${_DIAG_INFO[topDiag[0]]?.fullnamn || topDiag[0]} (${topDiag[1]}%). Baserat på inmatade test och bilddiagnostik.`
+      : 'Ingen tydlig differentialdiagnostisk profil med aktuella data.';
+  } catch(e) {
+    console.error('diagnosSpindel fel:', e);
+    if (statusEl) statusEl.textContent = 'Fel: ' + (e?.message || e);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PATIENT SPARA / HÄMTA
+// ═══════════════════════════════════════════════════════════════
+function samlaPatientData() {
+  const get = id => { const el=document.getElementById(id); return el?el.value:null; };
+  return {
+    patient: {
+      id: get('p_id'), namn: get('p_namn'), kon: get('p_kon'),
+      alder: get('p_alder'), datum: get('p_datum'), testledare: get('p_testledare'),
+      utb: get('p_utb'), sprak: get('p_sprak')
+    },
+    test: {
+      ravlt_1:get('ravlt_1'), ravlt_2:get('ravlt_2'), ravlt_3:get('ravlt_3'),
+      ravlt_4:get('ravlt_4'), ravlt_5:get('ravlt_5'), ravlt_dr:get('ravlt_dr'),
+      ravlt_dist:get('ravlt_dist'), ravlt_rek_sp:get('ravlt_rek_sp'), ravlt_rek_fp:get('ravlt_rek_fp'),
+      bvmt_1:get('bvmt_1'), bvmt_2:get('bvmt_2'), bvmt_3:get('bvmt_3'),
+      bvmt_dr:get('bvmt_dr'), bvmt_rek_sp:get('bvmt_rek_sp'), bvmt_rek_fp:get('bvmt_rek_fp'),
+      rcft_kop:get('rcft_kop'), rcft_3min:get('rcft_3min'), rcft_30min:get('rcft_30min'),
+      rcft_rek_sp:get('rcft_rek_sp'), rcft_rek_fp:get('rcft_rek_fp'),
+      block_raw:get('block_raw'), lik_raw:get('lik_raw'), info_raw:get('info_raw'), kod_raw:get('kod_raw'),
+      siff_fram:get('siff_fram'), siff_bak:get('siff_bak'), siff_ordning:get('siff_ordning'),
+      tmt_a:get('tmt_a'), tmt_b:get('tmt_b'),
+      fas_f:get('fas_f'), fas_a:get('fas_a'), fas_s:get('fas_s'), djur:get('djur'),
+      utb_flode:get('utb_flode'), klocka_rita:get('klocka_rita'), klocka_avlasa:get('klocka_avlasa'),
+      klocka_system:get('klocka_system')
+    },
+    bild: {
+      mta_h:get('mta_h'), mta_v:get('mta_v'), gca:get('gca'), koedam:get('koedam'),
+      fazekas:get('fazekas'), fazekas_pv:get('fazekas_pv'), fazekas_dvs:get('fazekas_dvs')
+    },
+    testresultat: gTestRes
+  };
+}
+
+function fyllInPatientData(data) {
+  const set = (id, val) => { const el=document.getElementById(id); if(el&&val!==null&&val!==undefined) el.value=val; };
+  const p = data.patient || {};
+  set('p_id',p.id); set('p_namn',p.namn); set('p_kon',p.kon);
+  set('p_alder',p.alder); set('p_datum',p.datum); set('p_testledare',p.testledare);
+  set('p_utb',p.utb); set('p_sprak',p.sprak);
+
+  const t = data.test || {};
+  Object.keys(t).forEach(k => set(k, t[k]));
+
+  const b = data.bild || {};
+  Object.keys(b).forEach(k => set(k, b[k]));
+
+  if (data.testresultat) gTestRes = data.testresultat;
+
+  uppdateraPatientBar();
+  tolkaBild();
+}
+
+async function nyPatient() {
+  try {
+    const resp = await fetch('/patient_ny', {method:'POST', headers:{'Content-Type':'application/json'}, body:'{}'});
+    const data = await resp.json();
+    sessionStorage.setItem('ngPendingPid', data.patient_id);
+    window.location.reload();
+  } catch(e) { alert('Fel: ' + e.message); }
+}
+
+async function sparaPatient() {
+  const pid = document.getElementById('p_id').value.trim();
+  if (!pid) { alert('Ange Patient-ID först.'); return; }
+  const data = samlaPatientData();
+  try {
+    const resp = await fetch('/patient_spara', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({patient_id: pid, data})
+    });
+    const res = await resp.json();
+    if (res.ok) {
+      document.getElementById('sparaStatus').innerHTML = `<div class="alert alert-ok">✅ Sparad: ${pid} (${res.datum})</div>`;
+    } else {
+      document.getElementById('sparaStatus').innerHTML = `<div class="alert alert-error">❌ ${res.error}</div>`;
+    }
+  } catch(e) { alert('Fel vid sparning: ' + e.message); }
+}
+
+function visaHamtaDialog() {
+  const panel = document.getElementById('hamtaPanel');
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  if (panel.style.display === 'block') laddaPatientLista();
+}
+
+async function laddaPatientLista() {
+  try {
+    const resp = await fetch('/patient_lista');
+    const lista = await resp.json();
+    const wrap = document.getElementById('patientListaWrap');
+    if (lista.length === 0) { wrap.innerHTML = '<div style="font-size:12px;color:var(--sub)">Inga sparade patienter.</div>'; return; }
+    wrap.innerHTML = lista.map(p => `
+      <div onclick="hamtaSpecifik('${p.patient_id}')" style="padding:6px 10px;cursor:pointer;border-radius:6px;border:1px solid var(--border);margin-bottom:4px;font-size:12px;display:flex;justify-content:space-between;align-items:center;background:var(--gray-lt)">
+        <span style="font-weight:500">${p.patient_id}</span>
+        <span style="color:var(--sub)">${p.andrad_datum||''}</span>
+      </div>`).join('');
+  } catch(e) { console.error(e); }
+}
+
+async function hamtaSpecifik(pid) {
+  document.getElementById('hamtaPidInput').value = pid;
+  await hamtaPatient();
+}
+
+async function hamtaPatient() {
+  const pid = document.getElementById('hamtaPidInput').value.trim();
+  if (!pid) { alert('Ange Patient-ID.'); return; }
+  try {
+    const resp = await fetch('/patient_hamta', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({patient_id: pid})
+    });
+    const res = await resp.json();
+    if (res.ok) {
+      fyllInPatientData(res.data);
+      document.getElementById('hamtaPanel').style.display = 'none';
+      document.getElementById('sparaStatus').innerHTML = `<div class="alert alert-ok">✅ Laddad: ${pid} (sparat ${res.sparad_datum})</div>`;
+    } else {
+      document.getElementById('sparaStatus').innerHTML = `<div class="alert alert-error">❌ ${res.error}</div>`;
+    }
+  } catch(e) { alert('Fel vid hämtning: ' + e.message); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 3D TOPOLOGI – Three.js korrelationslandskap
+// ═══════════════════════════════════════════════════════════════
+let _topo = null;  // { scene, camera, renderer, peakSpheres, spherical, animId }
+
+// Gemensam färggradient: blå (lågt) → orange → gul → röd (högt)
+function topoFarg(t) {
+  // t: 0–1
+  if (t <= 0)    return new THREE.Color(0.03, 0.05, 0.35);   // mörkblå botten
+  if (t < 0.25)  return new THREE.Color(                      // blå
+    0.03 + t*0.3, 0.08 + t*0.5, 0.35 + t*1.6);
+  if (t < 0.50)  {                                            // blå → orange
+    const s = (t - 0.25) / 0.25;
+    return new THREE.Color(0.10 + s*0.85, 0.20 + s*0.25, 0.75 - s*0.75); }
+  if (t < 0.75)  {                                            // orange → gul
+    const s = (t - 0.50) / 0.25;
+    return new THREE.Color(0.95, 0.45 + s*0.45, 0.02 - s*0.02); }
+  {                                                           // gul → röd
+    const s = (t - 0.75) / 0.25;
+    return new THREE.Color(0.97, 0.90 - s*0.85, 0.02); }
+}
+
+function viktFarg3D(t, isDiag) {
+  if (isDiag) return new THREE.Color(0.9, 0.75, 0.0);  // guld diagonal
+  return topoFarg(t);
+}
+
+async function laddaTopo3D() {
+  if (!gMatrisData) await laddaMatrisHeatmap();
+  bygg3DScen(gMatrisData, gMatrisRes ? (gMatrisRes.avvikelser || {}) : {});
+}
+
+function aterstallKamera() {
+  if (!_topo) return;
+  _topo.spherical = { phi: 1.05, theta: 0.55, radius: 26 };
+  uppdateraKamera();
+}
+
+function uppdateraKamera() {
+  if (!_topo) return;
+  const { phi, theta, radius } = _topo.spherical;
+  _topo.camera.position.set(
+    radius * Math.sin(phi) * Math.cos(theta),
+    radius * Math.cos(phi) + 3,
+    radius * Math.sin(phi) * Math.sin(theta)
+  );
+  _topo.camera.lookAt(0, 3, 0);
+}
+
+function bygg3DScen(data, avvikelser) {
+  // avvikelser: {kod: avv} – bara mätta variabler (normala=0.0, patol>0)
+  // Toppar visas BARA där faktisk förstärkning finns: avv1 × avv2 × vikt > 0
+  if (!window.THREE) { alert('Three.js inte laddat.'); return; }
+
+  const container = document.getElementById('topo3DContainer');
+  const W = container.clientWidth || 700;
+  const H = 480;
+
+  if (_topo) {
+    cancelAnimationFrame(_topo.animId);
+    _topo.renderer.dispose();
+    container.innerHTML = '';
+  }
+
+  const harPatientData = avvikelser && Object.keys(avvikelser).length > 0;
+
+  // Hjälp: avvikelse för variabel-index i data
+  const avvFn = (idx) => {
+    const kod = data.variabler[idx].kod;
+    if (!avvikelser || !Object.prototype.hasOwnProperty.call(avvikelser, kod)) return null; // omätt
+    return avvikelser[kod] || 0;
+  };
+
+  // ─── Scen ────────────────────────────────────────────────────
+  const scene    = new THREE.Scene();
+  scene.background = new THREE.Color(0x06060f);
+  scene.fog        = new THREE.Fog(0x06060f, 35, 65);
+
+  const camera   = new THREE.PerspectiveCamera(42, W / H, 0.1, 120);
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(W, H);
+  renderer.shadowMap.enabled = false;
+  container.appendChild(renderer.domElement);
+
+  // ─── Belysning ───────────────────────────────────────────────
+  scene.add(new THREE.AmbientLight(0x222244, 2.5));
+  const dir1 = new THREE.DirectionalLight(0xffffff, 2.8);
+  dir1.position.set(12, 22, 12); scene.add(dir1);
+  const dir2 = new THREE.DirectionalLight(0x5533ff, 1.2);
+  dir2.position.set(-14, 8, -10); scene.add(dir2);
+  const dir3 = new THREE.DirectionalLight(0xff3355, 0.8);
+  dir3.position.set(0, -5, 0); scene.add(dir3);
+
+  const n      = data.n;
+  const SIZE   = 20;
+  const step   = SIZE / (n - 1);
+  const HSCALE = 0.75;
+
+  // ─── Bakgrundsyta: statisk matris, mycket nedtonad ────────────
+  {
+    const posB = new Float32Array(n * n * 3);
+    const colB = new Float32Array(n * n * 3);
+    const idxB = [];
+    for (let i = 0; i < n; i++) {
+      for (let j = 0; j < n; j++) {
+        const vi = i * n + j;
+        const w  = data.matris[i][j];
+        const y  = harPatientData
+          ? 0   // platt när vi har patientdata – aktiveringen visas separat
+          : (w > 0 ? Math.pow(w / 10, 0.65) * 10 : 0) * HSCALE;
+        posB[vi*3]   = -SIZE/2 + j*step;
+        posB[vi*3+1] = y;
+        posB[vi*3+2] = -SIZE/2 + i*step;
+        // Bakgrundsfärg: samma gradient men nedtonad
+        const fc2 = topoFarg(harPatientData ? 0 : w / 10);
+        colB[vi*3]   = fc2.r * (harPatientData ? 0.15 : 0.6);
+        colB[vi*3+1] = fc2.g * (harPatientData ? 0.15 : 0.6);
+        colB[vi*3+2] = fc2.b * (harPatientData ? 0.4  : 0.6);
+      }
+    }
+    for (let i = 0; i < n-1; i++) for (let j = 0; j < n-1; j++) {
+      const a=i*n+j, b=i*n+(j+1), c=(i+1)*n+j, d=(i+1)*n+(j+1);
+      idxB.push(a,c,b, b,c,d);
+    }
+    const geoB = new THREE.BufferGeometry();
+    geoB.setAttribute('position', new THREE.BufferAttribute(posB, 3));
+    geoB.setAttribute('color',    new THREE.BufferAttribute(colB, 3));
+    geoB.setIndex(idxB);
+    geoB.computeVertexNormals();
+    scene.add(new THREE.Mesh(geoB, new THREE.MeshPhongMaterial({
+      vertexColors: true, shininess: 30, side: THREE.DoubleSide,
+      transparent: true, opacity: harPatientData ? 0.35 : 0.75,
+    })));
+  }
+
+  // ─── Aktiveringsyta: patient-specifik förstärkning ────────────
+  // Höjd vid (i,j) = avv_i × avv_j × vikt (skala 0–10)
+  // Platt (0) om en av variablerna är omätt eller normal
+  const posArr = new Float32Array(n * n * 3);
+  const colArr = new Float32Array(n * n * 3);
+  const idxArr = [];
+
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < n; j++) {
+      const vi  = i * n + j;
+      const a1  = avvFn(i), a2 = avvFn(j);
+      const vikt = data.matris[i][j];
+      const fs  = (a1 !== null && a2 !== null && a1 > 0 && a2 > 0)
+                    ? a1 * a2 * vikt : 0;
+      const y   = (fs > 0 ? Math.pow(fs / 10, 0.6) * 10 : 0) * HSCALE;
+
+      posArr[vi*3]   = -SIZE/2 + j*step;
+      posArr[vi*3+1] = y;
+      posArr[vi*3+2] = -SIZE/2 + i*step;
+
+      // Färg: blå (lågt/ingen patologi) → orange → gul → röd (hög förstärkning)
+      const t = Math.min(1, fs / 10);
+      const fc = topoFarg(t);
+      colArr[vi*3] = fc.r; colArr[vi*3+1] = fc.g; colArr[vi*3+2] = fc.b;
+    }
+  }
+  for (let i = 0; i < n-1; i++) for (let j = 0; j < n-1; j++) {
+    const a=i*n+j, b=i*n+(j+1), c=(i+1)*n+j, d=(i+1)*n+(j+1);
+    idxArr.push(a,c,b, b,c,d);
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
+  geo.setAttribute('color',    new THREE.BufferAttribute(colArr, 3));
+  geo.setIndex(idxArr);
+  geo.computeVertexNormals();
+
+  if (harPatientData) {
+    scene.add(new THREE.Mesh(geo, new THREE.MeshPhongMaterial({
+      vertexColors: true, shininess: 110, side: THREE.DoubleSide,
+      specular: new THREE.Color(0.4, 0.2, 0.2),
+    })));
+    scene.add(new THREE.Mesh(geo, new THREE.MeshBasicMaterial({
+      color: 0x441122, wireframe: true, transparent: true, opacity: 0.08,
+    })));
+  }
+
+  // Markplan
+  const gridHelper = new THREE.GridHelper(SIZE, n-1, 0x112244, 0x0a0a22);
+  gridHelper.position.y = -0.1;
+  scene.add(gridHelper);
+
+  // ─── Toppar: BARA faktiskt förstärkta par ─────────────────────
+  const peakSpheres = [];
+  const PEAK_TROSKEL = 0.5; // förstärkning > 0.5 för att synas
+
+  for (let i = 0; i < n; i++) {
+    for (let j = i+1; j < n; j++) {
+      const vikt = data.matris[i][j];
+      if (vikt < 4) continue;
+
+      const a1 = avvFn(i), a2 = avvFn(j);
+      if (a1 === null || a2 === null || a1 === 0 || a2 === 0) continue; // en omätt/normal → ingen topp
+      const forstarkn = a1 * a2 * vikt;
+      if (forstarkn < PEAK_TROSKEL) continue;
+
+      const x = -SIZE/2 + j*step;
+      const z = -SIZE/2 + i*step;
+      const y = (Math.pow(forstarkn/10, 0.6)*10) * HSCALE;
+
+      const r   = 0.12 + (forstarkn/10) * 0.22;
+      const sGeo = new THREE.SphereGeometry(r, 14, 10);
+      const intensity = Math.min(1, forstarkn / 10);
+      const sCol = new THREE.Color().setHSL(0.97 - intensity*0.12, 1.0, 0.52);
+      const sMat = new THREE.MeshPhongMaterial({
+        color: sCol,
+        emissive: new THREE.Color().setHSL(0.97, 1.0, 0.25),
+        emissiveIntensity: 0.9, shininess: 140,
+      });
+      const sphere = new THREE.Mesh(sGeo, sMat);
+      sphere.position.set(x, y + r + 0.05, z);
+
+      const detalj = data.korr_detalj ? (data.korr_detalj[`${i}_${j}`] || {}) : {};
+      sphere.userData = {
+        var1: data.variabler[i].namn, var2: data.variabler[j].namn,
+        hjarn1: data.variabler[i].hjarn_struktur, hjarn2: data.variabler[j].hjarn_struktur,
+        vikt, forstarkn: forstarkn.toFixed(1),
+        avv1: Math.round(a1*100), avv2: Math.round(a2*100),
+        mekanism: detalj.mekanism || '', referens: detalj.referens || '',
+      };
+      scene.add(sphere);
+      peakSpheres.push(sphere);
+
+      // Glödring runt alla toppar (alla är patologiska per definition)
+      const ringGeo = new THREE.TorusGeometry(r*2.2, 0.04, 6, 24);
+      const ring = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({
+        color: 0xffffff, transparent: true, opacity: 0.65,
+      }));
+      ring.rotation.x = Math.PI/2;
+      ring.position.copy(sphere.position);
+      scene.add(ring);
+    }
+  }
+
+  // Infotext om inga toppar
+  if (harPatientData && peakSpheres.length === 0) {
+    // Visa text i mitten
+    const canvas2d = document.createElement('canvas');
+    canvas2d.width = 512; canvas2d.height = 64;
+    const ctx2d = canvas2d.getContext('2d');
+    ctx2d.fillStyle = 'rgba(0,0,0,0)';
+    ctx2d.fillRect(0,0,512,64);
+    ctx2d.fillStyle = '#3ecf8e';
+    ctx2d.font = 'bold 22px Inter, sans-serif';
+    ctx2d.textAlign = 'center';
+    ctx2d.fillText('Inga förstärkta par – inga patologiska variabler', 256, 40);
+    const tex = new THREE.CanvasTexture(canvas2d);
+    const plane = new THREE.Mesh(
+      new THREE.PlaneGeometry(14, 1.8),
+      new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false })
+    );
+    plane.position.set(0, 2, 0);
+    plane.rotation.x = -0.2;
+    scene.add(plane);
+  }
+
+  // ─── Kamerastatus & rotation ──────────────────────────────────
+  const spherical = { phi: 1.05, theta: 0.55, radius: 26 };
+  let isDragging = false, prevX = 0, prevY = 0;
+  const raycaster = new THREE.Raycaster();
+  raycaster.params.Mesh.threshold = 0.3;
+  const mouseNDC = new THREE.Vector2();
+  let hoveredSphere = null;
+
+  const tooltip = document.getElementById('topo3DTooltip');
+
+  // Mus-händelser
+  renderer.domElement.style.cursor = 'grab';
+
+  renderer.domElement.addEventListener('mousedown', e => {
+    isDragging = true;
+    prevX = e.clientX; prevY = e.clientY;
+    renderer.domElement.style.cursor = 'grabbing';
+  });
+  document.addEventListener('mouseup', () => {
+    isDragging = false;
+    renderer.domElement.style.cursor = 'grab';
+  });
+
+  renderer.domElement.addEventListener('mousemove', e => {
+    const rect = renderer.domElement.getBoundingClientRect();
+    if (isDragging) {
+      spherical.theta -= (e.clientX - prevX) * 0.007;
+      spherical.phi    = Math.max(0.12, Math.min(Math.PI / 2 - 0.04,
+                          spherical.phi + (e.clientY - prevY) * 0.007));
+      prevX = e.clientX; prevY = e.clientY;
+      uppdateraKameraIntern();
+      return;
+    }
+
+    // Hover → raycaster
+    mouseNDC.set(
+      ((e.clientX - rect.left) / rect.width)  * 2 - 1,
+      -((e.clientY - rect.top)  / rect.height) * 2 + 1
+    );
+    raycaster.setFromCamera(mouseNDC, camera);
+    const hits = raycaster.intersectObjects(peakSpheres);
+
+    if (hits.length > 0) {
+      const obj = hits[0].object;
+      if (obj !== hoveredSphere) {
+        if (hoveredSphere) hoveredSphere.scale.setScalar(1.0);
+        hoveredSphere = obj;
+        obj.scale.setScalar(1.65);
+      }
+      const d = obj.userData;
+      tooltip.style.display = 'block';
+      tooltip.style.left = (e.clientX + 16) + 'px';
+      tooltip.style.top  = (e.clientY - 18) + 'px';
+      tooltip.innerHTML  = `
+        <span style="color:#ff4466;font-size:10px;font-weight:700">⚡ FÖRSTÄRKT SIGNAL</span><br>
+        <div style="font-weight:700;font-size:13px;color:#fff;margin-top:3px">${d.var1}</div>
+        <div style="color:#aaa;margin-bottom:4px">↔ ${d.var2}</div>
+        <div style="color:#e94560;font-size:12px;font-weight:600">Förstärkning: ${d.forstarkn}/10 &nbsp;·&nbsp; Korr.vikt: ${d.vikt}</div>
+        <div style="font-size:11px;color:#f7924a;margin-top:2px">Avvikelse: ${d.avv1}% × ${d.avv2}%</div>
+        <div style="font-size:10px;color:#9ba3af;margin-top:5px">${d.hjarn1}</div>
+        <div style="font-size:10px;color:#9ba3af">↔ ${d.hjarn2}</div>
+        ${d.mekanism ? `<div style="font-size:10px;color:#c8cdd5;margin-top:5px;border-top:1px solid #222244;padding-top:5px">${d.mekanism.slice(0,130)}${d.mekanism.length>130?'…':''}</div>` : ''}
+        ${d.referens  ? `<div style="font-size:9px;color:#666;margin-top:3px;font-style:italic">${d.referens.slice(0,80)}</div>` : ''}
+      `;
+    } else {
+      tooltip.style.display = 'none';
+      if (hoveredSphere) { hoveredSphere.scale.setScalar(1.0); hoveredSphere = null; }
+    }
+  });
+
+  renderer.domElement.addEventListener('mouseleave', () => {
+    tooltip.style.display = 'none';
+    if (hoveredSphere) { hoveredSphere.scale.setScalar(1.0); hoveredSphere = null; }
+  });
+
+  renderer.domElement.addEventListener('wheel', e => {
+    spherical.radius = Math.max(10, Math.min(45, spherical.radius + e.deltaY * 0.045));
+    uppdateraKameraIntern();
+    e.preventDefault();
+  }, { passive: false });
+
+  function uppdateraKameraIntern() {
+    const { phi, theta, radius } = spherical;
+    camera.position.set(
+      radius * Math.sin(phi) * Math.cos(theta),
+      radius * Math.cos(phi) + 3,
+      radius * Math.sin(phi) * Math.sin(theta)
+    );
+    camera.lookAt(0, 3, 0);
+  }
+
+  // Resize
+  const resizeObs = new ResizeObserver(() => {
+    const W2 = container.clientWidth;
+    camera.aspect = W2 / H;
+    camera.updateProjectionMatrix();
+    renderer.setSize(W2, H);
+  });
+  resizeObs.observe(container);
+
+  // Animationsloop (lätt pulsering på sfärerna)
+  let animId;
+  let tick = 0;
+  function animate() {
+    animId = requestAnimationFrame(animate);
+    tick += 0.025;
+    peakSpheres.forEach((s, idx) => {
+      if (s !== hoveredSphere) {
+        const pulse = 1 + 0.06 * Math.sin(tick + idx * 0.7);
+        s.scale.setScalar(pulse);
+      }
+    });
+    renderer.render(scene, camera);
+  }
+
+  uppdateraKameraIntern();
+  animate();
+
+  // Spara referens
+  _topo = { scene, camera, renderer, peakSpheres, spherical, animId };
+
+  // Axel-legend
+  const legendEl = document.getElementById('topoAxisLegend');
+  if (legendEl) {
+    legendEl.textContent = data.variabler.map((v, i) => `${i+1}.${v.namn.split(' ')[0]}`).join(' · ');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MATRISANALYS
+// ═══════════════════════════════════════════════════════════════
+let gMatrisData = null;     // statisk matrisdata från /matris_data
+let gMatrisRes = null;      // senaste analysresultat
+let spindelMatrisChart = null;
+
+async function laddaMatrisHeatmap() {
+  try {
+    const resp = await fetch('/matris_data');
+    gMatrisData = await resp.json();
+    ritaHeatmap(gMatrisData, []);
+    document.getElementById('matrisStatus').innerHTML =
+      `<div class="alert alert-ok" style="margin-bottom:8px">✅ Matris laddad: ${gMatrisData.n} variabler, ritad.</div>`;
+  } catch(e) {
+    document.getElementById('matrisStatus').innerHTML =
+      `<div class="alert alert-error">Fel: ${e.message}</div>`;
+  }
+}
+
+async function korMatrisAnalys() {
+  if (!gTestRes || Object.keys(gTestRes).length === 0) {
+    alert('Beräkna T-poäng på testsidan först.');
+    return;
+  }
+
+  const get = id => { const el=document.getElementById(id); return el&&el.value!==''?parseFloat(el.value):null; };
+  const bilddiagnostik = {
+    mta_h: get('mta_h'), mta_v: get('mta_v'),
+    gca: get('gca'), koedam: get('koedam'), fazekas: get('fazekas')
+  };
+  const alder = parseInt(document.getElementById('p_alder').value) || 70;
+
+  document.getElementById('matrisStatus').innerHTML =
+    '<div class="alert alert-info">⏳ Beräknar matrisaktivering…</div>';
+
+  try {
+    const resp = await fetch('/matris_analys', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ tscorer: gTestRes, bilddiagnostik, alder })
+    });
+    gMatrisRes = await resp.json();
+    visaMatrisResultat(gMatrisRes);
+
+    // Ladda heatmap om den inte är laddad
+    if (!gMatrisData) await laddaMatrisHeatmap();
+    else ritaHeatmap(gMatrisData, Object.keys(gMatrisRes.patologiska_variabler || {}));
+
+    // Uppdatera 3D med patologiska variabler markerade
+    if (gMatrisData) bygg3DScen(gMatrisData, gMatrisRes.avvikelser || {});
+
+  } catch(e) {
+    document.getElementById('matrisStatus').innerHTML =
+      `<div class="alert alert-error">Fel: ${e.message}</div>`;
+  }
+}
+
+function visaMatrisResultat(res) {
+  document.getElementById('matrisResultatPanel').style.display = 'block';
+  document.getElementById('matrisStatus').innerHTML =
+    `<div class="alert alert-ok" style="margin-bottom:8px">✅ Analys klar · ${res.n_patologiska} patologiska variabler · ${res.n_forstarkta_par} förstärkningspar</div>`;
+
+  document.getElementById('statPatol').textContent = res.n_patologiska;
+  document.getElementById('statPar').textContent = res.n_forstarkta_par;
+  document.getElementById('matrisText').textContent = res.sammanfattning;
+
+  // Diagnoser
+  const diagnosEl = document.getElementById('statDiagnos');
+  if (res.diagnos_rank && res.diagnos_rank.length) {
+    diagnosEl.innerHTML = res.diagnos_rank.slice(0,3).map(([d, pct]) =>
+      `<span style="margin-right:10px"><b>${d}</b>: ${pct}%</span>`).join('');
+  }
+
+  // Förstärkningspar
+  const fpEl = document.getElementById('forstarkningsPanelen');
+  if (res.forstarkta_par && res.forstarkta_par.length) {
+    fpEl.innerHTML = res.forstarkta_par.slice(0,6).map(par => `
+      <div style="margin-bottom:10px;padding:9px 12px;border-radius:8px;background:rgba(233,69,96,0.08);border:1px solid rgba(233,69,96,0.2)">
+        <div style="font-weight:600;font-size:12.5px">
+          ${par.var1} ↔ ${par.var2}
+          <span style="font-size:11px;color:var(--sub);font-weight:400;margin-left:6px">vikt ${par.vikt} · Δ=${par.forstarkningsfaktor}</span>
+        </div>
+        <div style="font-size:11px;color:var(--text-2);margin-top:3px">${par.mekanism || ''}</div>
+        <div style="font-size:10px;color:var(--sub);margin-top:2px">${par.referens || ''}</div>
+      </div>`).join('');
+  } else {
+    fpEl.innerHTML = '<div style="color:var(--sub);font-size:12px">Inga starka förstärkningspar påvisade.</div>';
+  }
+
+  // Aktiveringsstaplar
+  ritaAktiveringsBars(res.struktur_aktivering);
+
+  // Spindeldiagram med matris-lager
+  ritaSpindelMatris(res.matris_t);
+
+  // Nätverk
+  if (gMatrisData) ritaNatverk(res.avvikelser || {}, gMatrisData);
+}
+
+function ritaAktiveringsBars(strukturAkt) {
+  const el = document.getElementById('aktiveringsBars');
+  if (!strukturAkt || Object.keys(strukturAkt).length === 0) {
+    el.innerHTML = '<div style="color:var(--sub);font-size:12px">Inga aktiverade strukturer.</div>';
+    return;
+  }
+  const entries = Object.entries(strukturAkt).slice(0, 10);
+  el.innerHTML = entries.map(([s, pct]) => {
+    const col = pct >= 70 ? '#f25c54' : pct >= 40 ? '#f7924a' : '#3ecf8e';
+    return `<div style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">
+        <span style="color:var(--text-2);font-weight:500">${s}</span>
+        <span style="color:${col};font-weight:700">${pct}%</span>
+      </div>
+      <div style="height:8px;background:var(--border);border-radius:4px;overflow:hidden">
+        <div style="width:${pct}%;height:100%;background:${col};border-radius:4px;transition:width 0.6s"></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function ritaSpindelMatris(matrisT) {
+  const sd = spindelData(gTestRes);
+  const labels = sd.map(x => x.lbl);
+  const tOrig  = sd.map(x => x.t !== undefined && x.t !== null ? x.t : 0);
+
+  // Bygg matris-lager med samma ordning som spindelData
+  const tscoreKeyMap = {
+    'RAVLT total':       'ravlt_total_t',
+    'RAVLT fördröjd':    'ravlt_dr_t',
+    'BVMT-R total':      'bvmt_total_t',
+    'BVMT-R fördröjd':   'bvmt_dr_t',
+    'RCFT fördröjd':     'rcft_30min_t',
+    'TMT-A (inv.)':      'tmt_a_t',
+    'TMT-B (inv.)':      'tmt_b_t',
+    'Blockmönster':      'block_t',
+    'Kodning':           'kod_t',
+    'Sifferrep.':        'siff_t',
+    'FAS':               'fas_t',
+    'Djurnamn':          'djur_t',
+    'Likheter':          'lik_t',
+    'Information':       'info_t',
+  };
+  const tMatris = labels.map(lbl => {
+    const key = tscoreKeyMap[lbl];
+    return (key && matrisT && matrisT[key] !== undefined) ? matrisT[key] : (tOrig[labels.indexOf(lbl)] || 0);
+  });
+
+  const ctx = document.getElementById('spindelMatris');
+  if (!ctx) return;
+  if (spindelMatrisChart) spindelMatrisChart.destroy();
+
+  spindelMatrisChart = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Uppmätt T-poäng',
+          data: tOrig,
+          backgroundColor: 'rgba(74,124,247,0.12)',
+          borderColor: '#4a7cf7',
+          borderWidth: 2,
+          pointRadius: 3,
+          pointBackgroundColor: '#4a7cf7',
+        },
+        {
+          label: 'Matrisförstärkt signal',
+          data: tMatris,
+          backgroundColor: 'rgba(83,52,131,0.18)',
+          borderColor: '#a855f7',
+          borderWidth: 2,
+          borderDash: [3,3],
+          pointRadius: 3,
+          pointBackgroundColor: '#a855f7',
+        },
+        {
+          label: 'T=40 (gräns)',
+          data: Array(labels.length).fill(40),
+          borderColor: '#9ba3af', borderWidth:1, borderDash:[4,4],
+          backgroundColor:'transparent', pointRadius:0,
+        },
+      ]
+    },
+    options: {
+      scales: { r: { min:20, max:80, ticks:{stepSize:10,font:{size:9}}, pointLabels:{font:{size:10}} } },
+      plugins: { legend:{position:'bottom',labels:{font:{size:11}}} },
+      responsive:true, maintainAspectRatio:false
+    }
+  });
+}
+
+// ─── HEATMAP ─────────────────────────────────────────────────────────────────
+function viktFarg(v, isDiag) {
+  if (isDiag) return '#c8a800';  // diagonal = guld
+  if (v <= 0)  return '#0a0a14';
+  if (v <= 2)  return '#1a1a2e';
+  if (v <= 4)  return '#16213e';
+  if (v <= 6)  return '#0f3460';
+  if (v <= 8)  return '#533483';
+  return '#e94560';
+}
+
+function ritaHeatmap(data, patologiskaKoder) {
+  const canvas = document.getElementById('matrisHeatmap');
+  if (!canvas || !data) return;
+  const n = data.n;
+  const CELL = 24, LABEL_W = 110, LABEL_H = 90;
+  canvas.width  = LABEL_W + n * CELL + 4;
+  canvas.height = LABEL_H + n * CELL + 4;
+  const ctx2 = canvas.getContext('2d');
+  ctx2.clearRect(0, 0, canvas.width, canvas.height);
+
+  const varNamn = data.variabler.map(v => v.namn.length > 14 ? v.namn.slice(0,13)+'…' : v.namn);
+  const varKoder = data.variabler.map(v => v.kod);
+
+  // Kolumnetiketter (roterade)
+  ctx2.save();
+  ctx2.font = '9px Inter, sans-serif';
+  ctx2.fillStyle = '#9ba3af';
+  for (let j = 0; j < n; j++) {
+    ctx2.save();
+    ctx2.translate(LABEL_W + j * CELL + CELL/2, LABEL_H - 4);
+    ctx2.rotate(-Math.PI/2);
+    ctx2.textAlign = 'left';
+    ctx2.fillText(varNamn[j], 0, 0);
+    ctx2.restore();
+  }
+  ctx2.restore();
+
+  // Radetiketter
+  ctx2.font = '9px Inter, sans-serif';
+  ctx2.fillStyle = '#9ba3af';
+  ctx2.textAlign = 'right';
+  for (let i = 0; i < n; i++) {
+    const isPatol = patologiskaKoder.includes(varKoder[i]);
+    ctx2.fillStyle = isPatol ? '#f25c54' : '#9ba3af';
+    ctx2.fillText(varNamn[i], LABEL_W - 4, LABEL_H + i * CELL + CELL/2 + 3);
+  }
+
+  // Celler
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < n; j++) {
+      const v = data.matris[i][j];
+      const isDiag = (i === j);
+      const x = LABEL_W + j * CELL;
+      const y = LABEL_H + i * CELL;
+      ctx2.fillStyle = viktFarg(v, isDiag);
+      ctx2.fillRect(x, y, CELL-1, CELL-1);
+
+      // Glöd om BÅDA är patologiska
+      const b1 = patologiskaKoder.includes(varKoder[i]);
+      const b2 = patologiskaKoder.includes(varKoder[j]);
+      if (!isDiag && v > 0 && b1 && b2) {
+        ctx2.strokeStyle = 'rgba(255,255,255,0.75)';
+        ctx2.lineWidth = 1.5;
+        ctx2.strokeRect(x+0.5, y+0.5, CELL-2, CELL-2);
+      }
+    }
+  }
+
+  // Tooltip
+  const tooltip = document.getElementById('heatmapTooltip');
+  canvas.onmousemove = (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+    const j = Math.floor((mx - LABEL_W) / CELL);
+    const i = Math.floor((my - LABEL_H) / CELL);
+    if (i >= 0 && i < n && j >= 0 && j < n) {
+      const v = data.matris[i][j];
+      const isDiag = i === j;
+      let txt = isDiag
+        ? `${data.variabler[i].namn}\nLokalisation: ${v}\n${data.variabler[i].hjarn_struktur}`
+        : `${data.variabler[i].namn}\n↔ ${data.variabler[j].namn}\nVikt: ${v > 0 ? v : '—'}`;
+      if (!isDiag && v > 0) {
+        const korr = _hittaKorr(data, i, j);
+        if (korr) txt += `\n${korr.mekanism ? korr.mekanism.slice(0,80) : ''}\n${korr.referens || ''}`;
+      }
+      tooltip.style.display = 'block';
+      tooltip.style.left = (e.clientX + 12) + 'px';
+      tooltip.style.top  = (e.clientY + 12) + 'px';
+      tooltip.textContent = txt;
+    } else {
+      tooltip.style.display = 'none';
+    }
+  };
+  canvas.onmouseleave = () => { tooltip.style.display = 'none'; };
+}
+
+function _hittaKorr(data, i, j) {
+  // Heatmap data har inte mekanismbeskrivningar inbakade direkt
+  // Returnerar minimal info från matriscellen
+  return null;
+}
+
+// ─── NÄTVERK ─────────────────────────────────────────────────────────────────
+
+const _KATEGORI_FARG = {
+  'episodiskt_minne':         '#4a7cf7',
+  'visuospatialt_minne':      '#3ecf8e',
+  'visuospatial_konstruktion':'#f5c842',
+  'psykomotorisk_hastighet':  '#a855f7',
+  'exekutivt':                '#f7924a',
+  'semantiskt_minne':         '#06b6d4',
+  'arbetsminne':              '#e879f9',
+  'verbal_abstraktion':       '#84cc16',
+  'struktur':                 '#ef4444',
+};
+
+function _hexAlpha(hex, alpha) {
+  // Konverterar #rrggbb + alpha 0-1 till rgba()
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function _distToSegment(px, py, x1, y1, x2, y2) {
+  const dx = x2-x1, dy = y2-y1, len2 = dx*dx+dy*dy;
+  if (len2 === 0) return Math.hypot(px-x1, py-y1);
+  const t = Math.max(0, Math.min(1, ((px-x1)*dx+(py-y1)*dy)/len2));
+  return Math.hypot(px-(x1+t*dx), py-(y1+t*dy));
+}
+
+function ritaNatverk(avvikelser, matrisData) {
+  const canvas = document.getElementById('natverkCanvas');
+  if (!canvas || !matrisData) return;
+  const ctx2 = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx2.clearRect(0, 0, W, H);
+
+  if (!avvikelser || Object.keys(avvikelser).length === 0) {
+    ctx2.fillStyle = '#9ba3af';
+    ctx2.font = '13px Inter, sans-serif';
+    ctx2.textAlign = 'center';
+    ctx2.fillText('Inga testresultat – kör matrisanalys', W/2, H/2);
+    return;
+  }
+
+  const varList = matrisData.variabler;
+  const n = varList.length;
+
+  // Cirkulär layout för alla variabler
+  const cx = W/2, cy = H/2, r = Math.min(W,H) * 0.38;
+  const pos = {};
+  varList.forEach((v, i) => {
+    const angle = (2 * Math.PI * i / n) - Math.PI/2;
+    pos[v.kod] = { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
+  });
+
+  // Hjälpfunktion: tre tillstånd per variabel
+  // 'omatt'   = inte i avvikelser (ej administrerat)
+  // 'normal'  = i avvikelser, värde 0.0 (mätt men normalt)
+  // 'patol'   = i avvikelser, värde > 0.0 (avvikelse)
+  const mattad = (kod) => Object.prototype.hasOwnProperty.call(avvikelser, kod);
+  const avvOf  = (kod) => mattad(kod) ? (avvikelser[kod] || 0) : null;  // null = omätt
+
+  // ── Kanter – ritas bara om BÅDA är administrerade ─────────────────────────
+  for (let i = 0; i < n; i++) {
+    for (let j = i+1; j < n; j++) {
+      const vikt = matrisData.matris[i][j];
+      if (vikt < 4) continue;
+
+      const k1 = varList[i].kod, k2 = varList[j].kod;
+      const a1 = avvOf(k1), a2 = avvOf(k2);
+
+      // Hoppa över kanten om någon av noderna är omätt
+      if (a1 === null || a2 === null) continue;
+
+      const forstarkn = a1 * a2 * vikt;
+      const p1 = pos[k1], p2 = pos[k2];
+
+      ctx2.beginPath();
+      ctx2.moveTo(p1.x, p1.y);
+      ctx2.lineTo(p2.x, p2.y);
+
+      if (a1 === 0 && a2 === 0) {
+        // Båda mätt normala: tunn grå streckad – korrelation finns men inaktiv
+        ctx2.setLineDash([3, 5]);
+        ctx2.strokeStyle = 'rgba(155,163,175,0.15)';
+        ctx2.lineWidth = 0.5;
+      } else if (a1 === 0 || a2 === 0) {
+        // En normal, en patologisk: neutral tunn linje
+        ctx2.setLineDash([]);
+        ctx2.strokeStyle = 'rgba(155,163,175,0.30)';
+        ctx2.lineWidth = 1;
+      } else {
+        // Båda patologiska: förstärkt, tjock röd/orange
+        ctx2.setLineDash([]);
+        const intensitet = Math.min(1, forstarkn / 10);
+        ctx2.lineWidth = 1.5 + intensitet * 3.5;
+        if (forstarkn >= 5) {
+          ctx2.strokeStyle = `rgba(233,69,96,${0.45 + intensitet * 0.55})`;
+        } else if (forstarkn >= 2) {
+          ctx2.strokeStyle = `rgba(247,146,74,${0.45 + intensitet * 0.45})`;
+        } else {
+          ctx2.strokeStyle = 'rgba(200,150,50,0.55)';
+        }
+      }
+      ctx2.stroke();
+      ctx2.setLineDash([]);
+    }
+  }
+
+  // ── Noder ────────────────────────────────────────────────────────────────────
+  varList.forEach(v => {
+    const a    = avvOf(v.kod);  // null = omätt, 0 = normal, >0 = patol
+    const omatt = a === null;
+    const avv  = omatt ? 0 : a;
+    const p    = pos[v.kod];
+
+    if (omatt) {
+      // Omätt: mycket liten grå prick, ingen etikett
+      ctx2.beginPath();
+      ctx2.arc(p.x, p.y, 3, 0, 2*Math.PI);
+      ctx2.fillStyle = 'rgba(80,80,100,0.25)';
+      ctx2.fill();
+      ctx2.strokeStyle = 'rgba(155,163,175,0.20)';
+      ctx2.lineWidth = 0.5;
+      ctx2.stroke();
+      return;
+    }
+
+    const rad  = 5 + avv * 14;
+    const col  = _KATEGORI_FARG[v.kategori] || '#9ba3af';
+    const opac = avv === 0 ? 0.28 : 0.28 + 0.72 * avv;
+
+    // Glöd runt patologiska noder
+    if (avv >= 0.4) {
+      ctx2.beginPath();
+      ctx2.arc(p.x, p.y, rad + 6, 0, 2*Math.PI);
+      ctx2.fillStyle = _hexAlpha(col, 0.12);
+      ctx2.fill();
+    }
+
+    // Nodfyll
+    ctx2.beginPath();
+    ctx2.arc(p.x, p.y, rad, 0, 2*Math.PI);
+    ctx2.fillStyle = _hexAlpha(col, opac * 0.45);
+    ctx2.fill();
+    ctx2.strokeStyle = _hexAlpha(col, opac);
+    ctx2.lineWidth = avv > 0 ? 2 : 1;
+    ctx2.stroke();
+
+    // Etikett
+    const kortNamn = v.namn.split(' ').slice(0,2).join(' ');
+    ctx2.fillStyle = avv > 0 ? `rgba(255,255,255,${Math.min(1, opac + 0.2)})` : 'rgba(255,255,255,0.35)';
+    ctx2.font = `${avv > 0 ? 'bold ' : ''}${Math.max(7, Math.min(10, rad))}px Inter,sans-serif`;
+    ctx2.textAlign = 'center';
+    ctx2.fillText(kortNamn, p.x, p.y + 4);
+  });
+
+  // ── Tooltip ──────────────────────────────────────────────────────────────────
+  let ttEl = document.getElementById('natverkTooltip');
+  if (!ttEl) {
+    ttEl = document.createElement('div');
+    ttEl.id = 'natverkTooltip';
+    ttEl.style.cssText = 'position:fixed;background:#1a1a2e;border:1px solid #333;color:#e2e8f0;' +
+      'font-size:11px;padding:8px 12px;border-radius:8px;pointer-events:none;display:none;' +
+      'max-width:250px;white-space:pre-line;z-index:9999;line-height:1.6;box-shadow:0 4px 16px rgba(0,0,0,0.5)';
+    document.body.appendChild(ttEl);
+  }
+
+  canvas.onmousemove = (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const sx = canvas.width / rect.width, sy = canvas.height / rect.height;
+    const mx = (e.clientX - rect.left) * sx, my = (e.clientY - rect.top) * sy;
+
+    // Prioritera noder
+    for (const v of varList) {
+      const p = pos[v.kod];
+      const a = avvOf(v.kod);
+      const omatt = a === null;
+      const avv = omatt ? 0 : a;
+      const rad = omatt ? 3 : 5 + avv * 14;
+      if ((mx-p.x)**2 + (my-p.y)**2 <= Math.max(8, rad)*Math.max(8, rad)) {
+        let txt = v.namn + '\n';
+        if (omatt) {
+          txt += 'Ej administrerat';
+        } else if (avv === 0) {
+          txt += 'Normalt (ingen aktivering)';
+        } else {
+          txt += `Avvikelse: ${Math.round(avv*100)}%`;
+          if (v.hjarn_struktur) txt += '\n' + v.hjarn_struktur.split(',')[0].trim();
+        }
+        ttEl.textContent = txt;
+        ttEl.style.display = 'block';
+        ttEl.style.left = (e.clientX + 14) + 'px';
+        ttEl.style.top  = (e.clientY + 10) + 'px';
+        return;
+      }
+    }
+
+    // Kolla kanter (bara administrerade par)
+    for (let i = 0; i < n; i++) {
+      for (let j = i+1; j < n; j++) {
+        const vikt = matrisData.matris[i][j];
+        if (vikt < 4) continue;
+        const a1 = avvOf(varList[i].kod), a2 = avvOf(varList[j].kod);
+        if (a1 === null || a2 === null) continue;
+        const p1 = pos[varList[i].kod], p2 = pos[varList[j].kod];
+        if (_distToSegment(mx, my, p1.x, p1.y, p2.x, p2.y) < 7) {
+          const forstarkn = a1 * a2 * vikt;
+          let txt = `${varList[i].namn}\n↔ ${varList[j].namn}\nVikt: ${vikt}`;
+          if (a1 === 0 && a2 === 0) {
+            txt += '\n(inaktiv – båda normala)';
+          } else if (forstarkn > 0) {
+            txt += `\nAvv: ${Math.round(a1*100)}% × ${Math.round(a2*100)}%`;
+            txt += `\nFörstärkning: ${forstarkn.toFixed(1)}/10`;
+          }
+          ttEl.textContent = txt;
+          ttEl.style.display = 'block';
+          ttEl.style.left = (e.clientX + 14) + 'px';
+          ttEl.style.top  = (e.clientY + 10) + 'px';
+          return;
+        }
+      }
+    }
+    ttEl.style.display = 'none';
+  };
+  canvas.onmouseleave = () => { ttEl.style.display = 'none'; };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DIAGNOSMATRIS
+// ═══════════════════════════════════════════════════════════════
+let gDiagnosData = null;
+let gDiagnosScores = null;
+
+async function laddaDiagnosMatris() {
+  try {
+    document.getElementById('diagnosStatus').innerHTML =
+      '<div class="alert alert-info">⏳ Laddar matris…</div>';
+    const resp = await fetch('/diagnos_matris_data');
+    gDiagnosData = await resp.json();
+    ritaDiagnosHeatmap(gDiagnosData, {});
+    document.getElementById('diagnosStatus').innerHTML =
+      `<div class="alert alert-ok" style="margin-bottom:8px">✅ ${gDiagnosData.n_diag} sjukdomar × ${gDiagnosData.n_var} variabler laddade.</div>`;
+  } catch(e) {
+    document.getElementById('diagnosStatus').innerHTML =
+      `<div class="alert alert-error">Fel: ${e.message}</div>`;
+  }
+}
+
+async function korDiagnosMatchning() {
+  if (!gTestRes || Object.keys(gTestRes).length === 0) {
+    alert('Beräkna T-poäng på testsidan först.');
+    return;
+  }
+  const get = id => { const el=document.getElementById(id); return el&&el.value!==''?parseFloat(el.value):null; };
+  const bilddiagnostik = {
+    mta_h:get('mta_h'), mta_v:get('mta_v'),
+    gca:get('gca'), koedam:get('koedam'), fazekas:get('fazekas')
+  };
+  document.getElementById('diagnosStatus').innerHTML =
+    '<div class="alert alert-info">⏳ Matchar patient…</div>';
+  try {
+    const resp = await fetch('/diagnos_matris_analys', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ tscorer: gTestRes, bilddiagnostik })
+    });
+    const data = await resp.json();
+    gDiagnosScores = data.scores;
+    visaDiagnosMatchning(data.scores);
+    if (!gDiagnosData) await laddaDiagnosMatris();
+    else ritaDiagnosHeatmap(gDiagnosData, data.scores);
+  } catch(e) {
+    document.getElementById('diagnosStatus').innerHTML =
+      `<div class="alert alert-error">Fel: ${e.message}</div>`;
+  }
+}
+
+function visaDiagnosMatchning(scores) {
+  document.getElementById('diagnosMatchPanel').style.display = 'block';
+  document.getElementById('diagnosStatus').innerHTML =
+    '<div class="alert alert-ok" style="margin-bottom:8px">✅ Matchning klar.</div>';
+
+  // Hämta sjukdomsinfo från gDiagnosData om tillgängligt
+  const diagInfo = {};
+  if (gDiagnosData) gDiagnosData.diagnoser.forEach(d => { diagInfo[d.id] = d; });
+
+  const ranked = Object.entries(scores).sort((a,b) => b[1]-a[1]);
+
+  // DD-tabell
+  const tbody = document.getElementById('diagnosDDBody');
+  tbody.innerHTML = ranked.slice(0, 10).map(([id, pct], i) => {
+    const info = diagInfo[id] || {};
+    const barCol = pct > 40 ? 'var(--red)' : pct > 20 ? 'var(--orange)' : 'var(--blue)';
+    return `<tr>
+      <td style="color:var(--sub);font-weight:600">${i+1}</td>
+      <td>
+        <div style="font-weight:600;font-size:12px">${info.namn||id}</div>
+        <div style="font-size:10px;color:var(--sub)">${info.patologi||''}</div>
+      </td>
+      <td><span style="font-size:10px;background:var(--gray-lt);padding:2px 6px;border-radius:10px">${info.kategori||''}</span></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="width:60px;height:7px;background:var(--border);border-radius:4px;overflow:hidden">
+            <div style="width:${Math.min(pct*1.5,100)}%;height:100%;background:${barCol};border-radius:4px"></div>
+          </div>
+          <b style="color:${barCol};font-size:12px">${pct}%</b>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  // Stapeldiagram
+  const barEl = document.getElementById('diagnosBarPanel');
+  barEl.innerHTML = ranked.slice(0,12).map(([id, pct]) => {
+    const info = diagInfo[id] || {};
+    const col = pct > 40 ? '#f25c54' : pct > 20 ? '#f7924a' : '#4a7cf7';
+    const w = Math.min(pct * 1.5, 100);
+    return `<div style="margin-bottom:6px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px">
+        <span style="color:var(--text-2);font-weight:500;max-width:180px;overflow:hidden;white-space:nowrap">${info.namn||id}</span>
+        <span style="font-weight:700;color:${col}">${pct}%</span>
+      </div>
+      <div style="height:7px;background:var(--border);border-radius:4px;overflow:hidden">
+        <div style="width:${w}%;height:100%;background:${col};border-radius:4px;transition:width 0.5s"></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Profiltolkning (topp 3)
+  const profilEl = document.getElementById('diagnosProfilText');
+  if (ranked.length > 0 && diagInfo[ranked[0][0]]) {
+    const top = ranked.slice(0, 3);
+    profilEl.innerHTML = top.map(([id, pct], i) => {
+      const info = diagInfo[id];
+      const emoji = i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉';
+      return `<div style="margin-bottom:12px;padding:10px;border-radius:8px;background:${i===0?'rgba(74,124,247,0.07)':'var(--gray-lt)'};border:1px solid var(--border)">
+        <div style="font-weight:700;font-size:13px;margin-bottom:3px">${emoji} ${info.namn} <span style="font-weight:400;color:var(--sub);font-size:11px">${pct}%</span></div>
+        <div style="font-size:11px;color:var(--sub);margin-bottom:4px">${info.patologi} · ${info.kategori}</div>
+        <div style="font-size:12px;color:var(--text-2)">${info.beskrivning}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // Spindeldiagram
+  ritaDiagnosSpindel(scores, diagInfo);
+}
+
+let _diagnosSpindelChart = null;
+
+// ritaDiagnosSpindel: se implementation ovan (~rad 1227)
+
+// ─── HEATMAP ─────────────────────────────────────────────────────────────────
+function ritaDiagnosHeatmap(data, scores) {
+  const canvas = document.getElementById('diagnosHeatmapCanvas');
+  if (!canvas || !data) return;
+
+  const N_D = data.n_diag, N_V = data.n_var;
+  const CELL_W = 26, CELL_H = 28;
+  const LABEL_W = 165, LABEL_H = 95;
+  canvas.width  = LABEL_W + N_V * CELL_W + 4;
+  canvas.height = LABEL_H + N_D * CELL_H + 4;
+
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Kolumnetiketter (roterade)
+  ctx.save();
+  ctx.font = '9px Inter,sans-serif';
+  ctx.fillStyle = '#9ba3af';
+  for (let j = 0; j < N_V; j++) {
+    const lbl = data.variabler[j].namn.split(' ').slice(0,2).join(' ');
+    ctx.save();
+    ctx.translate(LABEL_W + j * CELL_W + CELL_W/2, LABEL_H - 4);
+    ctx.rotate(-Math.PI/2);
+    ctx.textAlign = 'left';
+    ctx.fillText(lbl.length > 14 ? lbl.slice(0,13)+'…' : lbl, 0, 0);
+    ctx.restore();
+  }
+  ctx.restore();
+
+  // Radetiketter (diagnoser)
+  const maxScore = Math.max(...Object.values(scores), 0.01);
+  for (let i = 0; i < N_D; i++) {
+    const d = data.diagnoser[i];
+    const pct = scores[d.id] || 0;
+    const isTop = pct > 0 && pct >= maxScore * 0.7;
+    ctx.font = isTop ? 'bold 9.5px Inter,sans-serif' : '9px Inter,sans-serif';
+    ctx.fillStyle = isTop ? '#f25c54' : '#9ba3af';
+    ctx.textAlign = 'right';
+    const lbl = d.namn.length > 24 ? d.namn.slice(0,23)+'…' : d.namn;
+    ctx.fillText(lbl, LABEL_W - 4, LABEL_H + i * CELL_H + CELL_H/2 + 3);
+
+    // Match-procent badge
+    if (pct > 0) {
+      const bCol = pct > 40 ? '#e94560' : pct > 20 ? '#f7924a' : '#4a7cf7';
+      ctx.fillStyle = bCol;
+      ctx.font = 'bold 8px Inter,sans-serif';
+      ctx.fillText(`${pct}%`, LABEL_W - 40, LABEL_H + i * CELL_H + CELL_H/2 + 3);
+    }
+  }
+
+  // Celler
+  for (let i = 0; i < N_D; i++) {
+    for (let j = 0; j < N_V; j++) {
+      const v = data.matris[i][j];
+      const x = LABEL_W + j * CELL_W;
+      const y = LABEL_H + i * CELL_H;
+
+      // Bakgrundsfärg (vikt)
+      const t = v / 10;
+      let fc;
+      if (t <= 0.01)       fc = '#0a0a14';
+      else if (t <= 0.2)   fc = '#1a1a2e';
+      else if (t <= 0.4)   fc = '#16213e';
+      else if (t <= 0.6)   fc = '#0f3460';
+      else if (t <= 0.8)   fc = '#533483';
+      else                  fc = '#e94560';
+      ctx.fillStyle = fc;
+      ctx.fillRect(x, y, CELL_W-1, CELL_H-1);
+
+      // Vit glöd om patienten matchar OCH hög vikt
+      const diagId = data.diagnoser[i].id;
+      const patScore = scores[diagId] || 0;
+      if (v >= 5 && patScore > 15) {
+        const alpha = Math.min(0.9, (patScore / 100) * (v / 10));
+        ctx.strokeStyle = `rgba(255,255,255,${alpha.toFixed(2)})`;
+        ctx.lineWidth = 1.4;
+        ctx.strokeRect(x+0.5, y+0.5, CELL_W-2, CELL_H-2);
+      }
+    }
+  }
+
+  // Tooltip
+  const tooltip = document.getElementById('diagnosHeatmapTooltip');
+  canvas.onmousemove = (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+    const j = Math.floor((mx - LABEL_W) / CELL_W);
+    const i = Math.floor((my - LABEL_H) / CELL_H);
+    if (i >= 0 && i < N_D && j >= 0 && j < N_V) {
+      const d = data.diagnoser[i], v = data.variabler[j];
+      const vikt = data.matris[i][j];
+      const pct = scores[d.id] || 0;
+      tooltip.style.display = 'block';
+      tooltip.style.left = (e.clientX + 14) + 'px';
+      tooltip.style.top  = (e.clientY + 10) + 'px';
+      tooltip.innerHTML = `
+        <div style="font-weight:700;font-size:12px;margin-bottom:3px">${d.namn}</div>
+        <div style="color:#aaa;font-size:10px;margin-bottom:4px">${d.patologi}</div>
+        <div style="color:#9ba3af;font-size:11px">Test: <b style="color:#e8eaed">${v.namn}</b></div>
+        <div style="color:#9ba3af;font-size:11px">Korrelationsvikt: <b style="color:${vikt>7?'#e94560':vikt>4?'#f7924a':'#4a7cf7'}">${vikt > 0 ? vikt.toFixed(1) : '—'}</b></div>
+        ${pct > 0 ? `<div style="color:#f5c842;font-size:11px;margin-top:4px">Patientmatchning: <b>${pct}%</b></div>` : ''}
+        <div style="font-size:10px;color:#667;margin-top:4px;border-top:1px solid #222244;padding-top:4px">${d.beskrivning.slice(0,110)}…</div>
+      `;
+    } else {
+      tooltip.style.display = 'none';
+    }
+  };
+  canvas.onmouseleave = () => { tooltip.style.display = 'none'; };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// NOLLSTÄLL – central reset för ny patient och uppstart
+// ═══════════════════════════════════════════════════════════════
+function nollstall() {
+  // ─── Patientfält ────────────────────────────────────────────
+  ['p_id','p_namn','p_alder','p_testledare','p_utb'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  const konEl = document.getElementById('p_kon'); if (konEl) konEl.value = '';
+  const sprakEl = document.getElementById('p_sprak'); if (sprakEl) sprakEl.value = 'svenska';
+  const datEl  = document.getElementById('p_datum');
+  if (datEl) datEl.value = new Date().toISOString().slice(0, 10);
+
+  // ─── Testfält ───────────────────────────────────────────────
+  ['ravlt_1','ravlt_2','ravlt_3','ravlt_4','ravlt_5',
+   'ravlt_dr','ravlt_dist','ravlt_rek_sp','ravlt_rek_fp',
+   'bvmt_1','bvmt_2','bvmt_3','bvmt_dr','bvmt_rek_sp','bvmt_rek_fp',
+   'rcft_kop','rcft_3min','rcft_30min','rcft_rek_sp','rcft_rek_fp',
+   'block_raw','lik_raw','info_raw','kod_raw',
+   'siff_fram','siff_bak','siff_ordning',
+   'tmt_a','tmt_b','tmt_ba_kvot_display',
+   'fas_f','fas_a','fas_s','djur',
+   'klocka_rita','klocka_avlasa'
+  ].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  const sysEl = document.getElementById('klocka_system'); if (sysEl) sysEl.value = 'shulman';
+  const utbEl = document.getElementById('utb_flode');     if (utbEl) utbEl.value = 'B';
+
+  // ─── Bilddiagnostik ─────────────────────────────────────────
+  ['mta_h','mta_v','gca','koedam','fazekas','fazekas_pv','fazekas_dvs'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+
+  // ─── Global state ───────────────────────────────────────────
+  gTestRes = {}; gMonster = []; gSammanfattning = '';
+  gMatrisRes = null;
+  gDiagnosScores = null;
+  // gMatrisData + gDiagnosData behålls (statisk, ej patientspecifik)
+
+  // ─── Hjälpfunktioner ────────────────────────────────────────
+  const hide  = id => { const el=document.getElementById(id); if(el) el.style.display='none'; };
+  const html  = (id,v='')=>{ const el=document.getElementById(id); if(el) el.innerHTML=v; };
+  const txt   = (id,v='')=>{ const el=document.getElementById(id); if(el) el.textContent=v; };
+
+  // ─── Testsida ───────────────────────────────────────────────
+  hide('resultatKort');
+  html('resultatTabell');
+  txt('klockaTolkning');
+
+  // ─── Patientsida ────────────────────────────────────────────
+  html('sparaStatus');
+  hide('hamtaPanel');
+  hide('patientBar');
+
+  // ─── Profiltolkning ─────────────────────────────────────────
+  html('monsterPanel',
+    '<div class="alert alert-info">Beräkna T-poäng på testsidan först, klicka sedan på knappen nedan.</div>' +
+    '<button class="btn btn-primary no-print" onclick="korProfiltolkning()" style="margin-top:8px">🔍 Kör profiltolkning</button>');
+  txt('profilText', 'Ingen sammanfattning ännu.');
+
+  // ─── Bilddiagnostik ─────────────────────────────────────────
+  hide('bildTolkPanel');
+  html('bildTolkText');
+
+  // ─── Sammanställning ────────────────────────────────────────
+  html('summaryTabell');
+  txt('summaryProfilText', 'Ingen sammanfattning. Kör profiltolkning på profiltolkningssidan.');
+  html('summaryBildTolk', '—');
+  html('printHeader');
+
+  // ─── Matrisanalys ───────────────────────────────────────────
+  html('matrisStatus');
+  hide('matrisResultatPanel');
+  txt('statPatol','—'); txt('statPar','—'); html('statDiagnos');
+  txt('matrisText','');
+  html('forstarkningsPanelen');
+  html('aktiveringsBars');
+  if (gMatrisData) ritaHeatmap(gMatrisData, []);
+  if (spindelMatrisChart) { spindelMatrisChart.destroy(); spindelMatrisChart = null; }
+
+  // ─── Diagnosmatris ──────────────────────────────────────────
+  html('diagnosStatus');
+  hide('diagnosMatchPanel');
+  html('diagnosDDBody');
+  html('diagnosBarPanel');
+  html('diagnosProfilText');
+  if (_diagnosSpindelChart) { _diagnosSpindelChart.destroy(); _diagnosSpindelChart = null; }
+  if (gDiagnosData) ritaDiagnosHeatmap(gDiagnosData, {});
+
+  // ─── Spindeldiagram ─────────────────────────────────────────
+  if (spindelNPChart)  { spindelNPChart.destroy();  spindelNPChart  = null; }
+  if (spindelNP2Chart) { spindelNP2Chart.destroy(); spindelNP2Chart = null; }
+  if (spindelMatrisChart) { spindelMatrisChart.destroy(); spindelMatrisChart = null; }
+  renderaSpindelNP(null, 'spindelNP');
+  renderaBildSpindel();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+// Synkronisera manuella fält till print-spans innan utskrift
+window.addEventListener('beforeprint', () => {
+  const retVal = document.getElementById('ravlt_ret_manuell');
+  const retKom = document.getElementById('ravlt_ret_kommentar');
+  const retPrint = document.getElementById('ravlt_ret_manuell_print');
+  const komPrint = document.getElementById('ravlt_ret_kommentar_print');
+  if (retPrint) retPrint.textContent = retVal && retVal.value ? retVal.value + ' %' : '—';
+  if (komPrint) komPrint.textContent = retKom && retKom.value ? retKom.value : '—';
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  nollstall();
+  const pendingPid = sessionStorage.getItem('ngPendingPid');
+  if (pendingPid) {
+    document.getElementById('p_id').value = pendingPid;
+    sessionStorage.removeItem('ngPendingPid');
+    uppdateraPatientBar();
+    document.getElementById('sparaStatus').innerHTML =
+      `<div class="alert alert-info">Nytt Patient-ID: ${pendingPid}</div>`;
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// UTSKRIFTSPROFIL
+// ═══════════════════════════════════════════════════════════════
+function oppnaProfil() {
+  const res = (typeof gTestRes !== 'undefined' && gTestRes) ? gTestRes : {};
+  const gv = id => { const el = document.getElementById(id); return el ? (el.value || '') : ''; };
+
+  const namn  = gv('p_namn')  || '—';
+  const alder = gv('p_alder') || '—';
+  const pid   = gv('p_id')    || '—';
+  const datum = new Date().toLocaleDateString('sv-SE');
+
+  const ravlt1 = gv('ravlt_1');
+  const bvmt1  = gv('bvmt_1');
+
+  const bvmtTotal = res.bvmt_total;
+  const bvmtDr    = res.bvmt_dr;
+  const bvmtReten = (bvmtTotal && bvmtDr !== undefined && bvmtDr !== null && bvmtDr !== '' && parseInt(bvmtTotal) > 0)
+      ? Math.round(parseInt(bvmtDr) / parseInt(bvmtTotal) * 100) + ' %' : '';
+
+  // RAVLT retention – hämtas från manuellt fält (ingen automatisk normering)
+  const ravltRetEl  = document.getElementById('ravlt_ret_manuell');
+  const ravltRetKomEl = document.getElementById('ravlt_ret_kommentar');
+  const ravltRetVal = ravltRetEl && ravltRetEl.value ? ravltRetEl.value + ' %' : '';
+  const ravltRetKom = ravltRetKomEl && ravltRetKomEl.value ? ravltRetKomEl.value : '';
+  const bvmtIgenk = (gv('bvmt_rek_sp') && gv('bvmt_rek_fp'))
+      ? String(parseInt(gv('bvmt_rek_sp') || 0) - parseInt(gv('bvmt_rek_fp') || 0)) : '';
+  const rcftIgenk = (gv('rcft_rek_sp') && gv('rcft_rek_fp'))
+      ? `${gv('rcft_rek_sp')} / ${gv('rcft_rek_fp')}` : '';
+
+  const fmt  = v => (v !== null && v !== undefined && v !== '') ? String(v) : '';
+  const tFmt = t => (t !== null && t !== undefined && t !== '') ? Math.round(t) : '';
+  const tPct = t => (t !== null && t !== undefined && t !== '')
+      ? Math.max(0, Math.min(100, (parseFloat(t) - 20) / 60 * 100)).toFixed(2) : null;
+  const tCol = t => {
+    if (t === null || t === undefined || t === '') return '#333';
+    const n = parseFloat(t);
+    if (n <= 29) return '#c0392b';
+    if (n <= 34) return '#d35400';
+    if (n <= 39) return '#c09000';
+    if (n <= 59) return '#27ae60';
+    if (n <= 69) return '#2980b9';
+    return '#1a5276';
+  };
+
+  const bellPts = Array.from({length: 121}, (_, i) => {
+    const t = 20 + i * 0.5;
+    const x = (t - 20) / 60 * 600;
+    const y = 57 - 51 * Math.exp(-Math.pow(t - 50, 2) / 200);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(' ');
+  const fillD = 'M0,60 L' + Array.from({length: 121}, (_, i) => {
+    const t = 20 + i * 0.5;
+    const x = (t - 20) / 60 * 600;
+    const y = 57 - 51 * Math.exp(-Math.pow(t - 50, 2) / 200);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(' L') + ' L600,60 Z';
+  const axisLabels = [20, 30, 40, 50, 60, 70, 80].map(tv => {
+    const x = ((tv - 20) / 60 * 100).toFixed(2);
+    return `<span style="position:absolute;left:${x}%;transform:translateX(-50%);font-size:9px;color:#888">${tv}</span>`;
+  }).join('');
+
+  const DIVIDERS = `linear-gradient(to right,
+    transparent calc(16.67% - 0.5px),#ccc calc(16.67% - 0.5px),#ccc 16.67%,transparent 16.67%,
+    transparent calc(33.33% - 0.5px),#ccc calc(33.33% - 0.5px),#ccc 33.33%,transparent 33.33%,
+    transparent calc(66.67% - 0.5px),#ccc calc(66.67% - 0.5px),#ccc 66.67%,transparent 66.67%,
+    transparent calc(83.33% - 0.5px),#ccc calc(83.33% - 0.5px),#ccc 83.33%,transparent 83.33%)`;
+  const ZONE_BG = `linear-gradient(to right,
+    rgba(192,57,43,.10) 16.67%,
+    rgba(211,84,0,.08) 16.67%,rgba(211,84,0,.08) 33.33%,
+    rgba(39,174,96,.09) 33.33%,rgba(39,174,96,.09) 66.67%,
+    rgba(41,128,185,.08) 66.67%,rgba(41,128,185,.08) 83.33%,
+    rgba(26,82,118,.10) 83.33%)`;
+
+  const rows = [
+    {cat:'MINNE'},
+    {lbl:'RCFT omedelbar ÅG',        rp:fmt(res.rcft_3min),                              t:res.rcft_3min_t},
+    {lbl:'RCFT fördröjd ÅG',         rp:fmt(res.rcft_30min),                             t:res.rcft_30min_t},
+    {lbl:'RCFT igenk. (SP / FP)',     rp:rcftIgenk},
+    {lbl:'RAVLT tot',                 rp:fmt(res.ravlt_total),                            t:res.ravlt_total_t},
+    {lbl:'RAVLT inlärn. (Trial 1)',   rp:fmt(ravlt1)},
+    {lbl:'RAVLT fördröjd ÅG',        rp:fmt(res.ravlt_dr),                               t:res.ravlt_dr_t},
+    {lbl:'RAVLT retention %',        rp:ravltRetVal, note:ravltRetKom},
+    {lbl:'BVMT-R tot. återg.',        rp:fmt(res.bvmt_total),                             t:res.bvmt_total_t},
+    {lbl:'BVMT-R inlärn. (Trial 1)',  rp:fmt(bvmt1)},
+    {lbl:'BVMT-R fördröjd ÅG',       rp:fmt(res.bvmt_dr),                                t:res.bvmt_dr_t},
+    {lbl:'BVMT reten %',              rp:bvmtReten},
+    {lbl:'BVMT igenkänning index',    rp:bvmtIgenk},
+    {lbl:'Information',               rp:fmt(res.info_raw),   vs:fmt(res.info_skalp),     t:res.info_t},
+    {lbl:'Sifferrepetition',          rp:fmt(res.siff_raw_total), vs:fmt(res.siff_skalp), t:res.siff_t},
+    {cat:'VISUOSPATIAL FÖRMÅGA'},
+    {lbl:'Blockmönster',              rp:fmt(res.block_raw),  vs:fmt(res.block_skalp),    t:res.block_t},
+    {lbl:'RCFT kopia',                rp:fmt(res.rcft_kop),                               t:res.rcft_kop_t},
+    {lbl:'Rita Klocka',               rp:gv('klocka_rita')},
+    {lbl:'Avläsa Klocka',             rp:gv('klocka_avlasa')},
+    {cat:'VERBALT FLÖDE'},
+    {lbl:'FAS total',                 rp:fmt(res.fas),                                    t:res.fas_t},
+    {lbl:'Djurnamn',                  rp:fmt(res.djur),                                   t:res.djur_t},
+    {cat:'UPPMÄRKSAMHET OCH PSYKOMOTORIK'},
+    {lbl:'TMT-A',                     rp:(res.tmt_a!==undefined&&res.tmt_a!==null)?res.tmt_a+' s':'', vs:fmt(res.tmt_a_ss), t:res.tmt_a_t},
+    {lbl:'TMT-B',                     rp:(res.tmt_b!==undefined&&res.tmt_b!==null)?res.tmt_b+' s':'', vs:fmt(res.tmt_b_ss), t:res.tmt_b_t},
+    {lbl:'Kodning',                   rp:fmt(res.kod_raw),    vs:fmt(res.kod_skalp),      t:res.kod_t},
+    {cat:'LOGISKT TÄNKANDE'},
+    {lbl:'Likheter',                  rp:fmt(res.lik_raw),    vs:fmt(res.lik_skalp),      t:res.lik_t},
+  ];
+
+  let di = 0;
+  const rowsHTML = rows.map(row => {
+    if (row.cat) { di=0; return `<div class="cat">${row.cat}</div>`; }
+    const t    = (row.t !== null && row.t !== undefined && row.t !== '') ? row.t : null;
+    const pct  = tPct(t);
+    const dot  = pct !== null
+      ? `<div class="dot" style="left:${pct}%;background:${tCol(t)}" title="T=${tFmt(t)}"></div>` : '';
+    const tCell = t !== null ? `<b style="color:${tCol(t)}">${tFmt(t)}</b>` : '';
+    const bg    = di++ % 2 === 0 ? '#fff' : '#f5f6f8';
+    const noteHtml = row.note ? `<span style="display:block;font-size:9.5px;color:#888;margin-top:1px">${row.note}</span>` : '';
+    return `<div class="dr" style="background:${bg}">
+  <div class="c0">${row.lbl}${noteHtml}</div>
+  <div class="c1">${fmt(row.rp)}</div>
+  <div class="c2">${row.vs !== undefined ? fmt(row.vs) : ''}</div>
+  <div class="c3">${tCell}</div>
+  <div class="cv">${dot}</div>
+</div>`;
+  }).join('\n');
+
+  const html = `<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<title>Neuropsykologisk profil – ${namn}</title>
+<style>
+@page{size:A4 portrait;margin:12mm 10mm}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,Helvetica,sans-serif;font-size:11.5px;color:#1a1a1a;background:#fff}
+.page{max-width:800px;margin:0 auto;padding:8px 0 20px}
+.hdr{border-bottom:2.5px solid #2c3e50;padding-bottom:7px;margin-bottom:8px}
+.hdr h1{font-size:15px;color:#2c3e50;margin-bottom:5px;letter-spacing:.3px}
+.hdr-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.hdr-cell{font-size:10.5px}.hdr-cell span{color:#666}
+.legend{display:flex;gap:14px;margin:0 0 6px;flex-wrap:wrap}
+.leg{display:flex;align-items:center;gap:3px;font-size:9.5px}
+.leg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.print-btn{position:fixed;top:10px;right:10px;padding:7px 15px;background:#2c3e50;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px;z-index:999;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+@media print{.print-btn{display:none}#editBar{display:none}body{font-size:10.5px;padding-top:0!important}.page{max-width:none}}
+.colh{display:grid;grid-template-columns:188px 44px 32px 38px 1fr;align-items:end;border-bottom:1.5px solid #2c3e50;margin-bottom:1px}
+.colh-lbl{font-size:9px;color:#555;font-weight:bold;padding:2px 2px 3px;text-align:center}
+.colh-lbl:first-child{text-align:left;padding-left:6px}
+.colh-curve{position:relative;height:60px;overflow:hidden}
+.colh-curve svg{width:100%;height:60px;display:block;position:relative;z-index:1}
+.colh-curve::after{content:'';position:absolute;inset:0;background:${DIVIDERS};pointer-events:none;z-index:2}
+.colh-axis{position:relative;height:14px;margin-bottom:1px}
+.cat{font-size:9.5px;font-weight:bold;color:#fff;background:#2c3e50;padding:3px 6px;margin-top:5px;letter-spacing:.4px;grid-column:1/-1}
+.dr{display:grid;grid-template-columns:188px 44px 32px 38px 1fr;align-items:center;min-height:19px;border-bottom:1px solid #e4e4e4}
+.c0{font-size:10.5px;padding:2px 4px 2px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.c1,.c2,.c3{font-size:10.5px;text-align:center;padding:2px 2px;color:#333}
+.c3 b{font-size:11.5px}
+.cv{position:relative;height:19px;background:${ZONE_BG}}
+.cv::after{content:'';position:absolute;inset:0;background:${DIVIDERS};pointer-events:none}
+.dot{position:absolute;top:50%;transform:translate(-50%,-50%);width:9px;height:9px;border-radius:50%;z-index:2;box-shadow:0 0 0 1.5px rgba(255,255,255,.85)}
+</style>
+</head>
+<body>
+<div id="editBar" style="position:fixed;top:0;left:0;right:0;z-index:998;background:#2c3e50;color:#fff;font-size:11px;padding:5px 12px;display:flex;align-items:center;gap:12px">
+  <b>✏️ Redigeringsläge:</b>
+  <span>Klicka på en kurva för att sätta/flytta markering &nbsp;·&nbsp; Högerklicka för att ta bort</span>
+  <span id="editHint" style="margin-left:auto;color:#aad4f5;font-style:italic"></span>
+</div>
+<button class="print-btn" onclick="window.print()">Skriv ut / Spara PDF</button>
+<script>
+(function(){
+  function tCol(t){
+    if(t<=29)return'#c0392b';if(t<=34)return'#d35400';
+    if(t<=39)return'#c09000';if(t<=59)return'#27ae60';
+    if(t<=69)return'#2980b9';return'#1a5276';
+  }
+  function pctToT(pct){ return Math.round(20 + pct/100*60); }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    document.body.style.paddingTop = '34px';
+    document.querySelectorAll('.cv').forEach(function(cv){
+      cv.style.cursor = 'crosshair';
+      cv.title = 'Klicka för att placera markering manuellt';
+
+      cv.addEventListener('click', function(e){
+        e.preventDefault();
+        const rect  = cv.getBoundingClientRect();
+        const pct   = Math.max(0, Math.min(100, (e.clientX - rect.left) / rect.width * 100));
+        const t     = pctToT(pct);
+        const color = tCol(t);
+
+        cv.querySelectorAll('.dot-manual, .dot-manual-lbl').forEach(function(d){ d.remove(); });
+
+        const dot = document.createElement('div');
+        dot.className = 'dot dot-manual';
+        dot.style.cssText = 'position:absolute;top:50%;transform:translate(-50%,-50%);'
+          + 'width:11px;height:11px;border-radius:50%;z-index:3;cursor:crosshair;'
+          + 'box-shadow:0 0 0 2px rgba(255,255,255,.9);'
+          + 'left:'+pct.toFixed(2)+'%;background:'+color+';'
+          + 'border:2px dashed rgba(0,0,0,.35)';
+        dot.title = 'T≊'+t+' (manuell) – högerklicka för att ta bort';
+
+        const lbl = document.createElement('span');
+        lbl.className = 'dot-manual-lbl';
+        lbl.style.cssText = 'position:absolute;top:1px;font-size:8px;font-weight:bold;'
+          + 'color:'+color+';white-space:nowrap;z-index:4;'
+          + 'left:calc('+pct.toFixed(2)+'% + 7px)';
+        lbl.textContent = 'T≊'+t;
+
+        cv.appendChild(dot);
+        cv.appendChild(lbl);
+
+        const hint = document.getElementById('editHint');
+        if(hint){ hint.textContent = 'Satte markering vid T≊'+t; setTimeout(function(){ hint.textContent=''; }, 2000); }
+      });
+
+      cv.addEventListener('contextmenu', function(e){
+        e.preventDefault();
+        cv.querySelectorAll('.dot-manual, .dot-manual-lbl').forEach(function(d){ d.remove(); });
+        const hint = document.getElementById('editHint');
+        if(hint){ hint.textContent = 'Markering borttagen'; setTimeout(function(){ hint.textContent=''; }, 1500); }
+      });
+    });
+  });
+})();
+<\/script>
+<div class="page">
+  <div class="hdr">
+    <h1>Neuropsykologisk profil</h1>
+    <div class="hdr-grid">
+      <div class="hdr-cell"><span>Namn:&nbsp;</span><b>${namn}</b></div>
+      <div class="hdr-cell"><span>Ålder:&nbsp;</span><b>${alder}</b></div>
+      <div class="hdr-cell"><span>Patient-ID:&nbsp;</span><b>${pid}</b></div>
+      <div class="hdr-cell"><span>Datum:&nbsp;</span><b>${datum}</b></div>
+    </div>
+  </div>
+  <div class="legend">
+    <div class="leg"><div class="leg-dot" style="background:#c0392b"></div>Patologiskt (&le;29)</div>
+    <div class="leg"><div class="leg-dot" style="background:#d35400"></div>Tydligt nedsatt (30&ndash;34)</div>
+    <div class="leg"><div class="leg-dot" style="background:#c09000"></div>Nedsatt (35&ndash;39)</div>
+    <div class="leg"><div class="leg-dot" style="background:#27ae60"></div>Normalt (40&ndash;59)</div>
+    <div class="leg"><div class="leg-dot" style="background:#2980b9"></div>Över genomsnitt (&ge;60)</div>
+  </div>
+  <div class="colh">
+    <div class="colh-lbl">Test</div>
+    <div class="colh-lbl">Råp.</div>
+    <div class="colh-lbl">SS</div>
+    <div class="colh-lbl">T</div>
+    <div>
+      <div class="colh-curve">
+        <svg viewBox="0 0 600 60" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="zg" x1="0" x2="1" y1="0" y2="0">
+              <stop offset="0%"      stop-color="#c0392b" stop-opacity=".12"/>
+              <stop offset="16.67%"  stop-color="#d35400" stop-opacity=".09"/>
+              <stop offset="33.33%"  stop-color="#27ae60" stop-opacity=".10"/>
+              <stop offset="66.67%"  stop-color="#2980b9" stop-opacity=".09"/>
+              <stop offset="83.33%"  stop-color="#1a5276" stop-opacity=".11"/>
+              <stop offset="100%"    stop-color="#1a5276" stop-opacity=".11"/>
+            </linearGradient>
+          </defs>
+          <path d="${fillD}" fill="url(#zg)"/>
+          <polyline points="${bellPts}" fill="none" stroke="#2c3e50" stroke-width="1.5"/>
+        </svg>
+      </div>
+      <div class="colh-axis">${axisLabels}</div>
+    </div>
+  </div>
+${rowsHTML}
+</div>
+</body>
+</html>`;
+
+  const w = window.open('', '_blank');
+  if (w) {
+    w.document.write(html);
+    w.document.close();
+  } else {
+    alert('Popup blockerades. Tillåt popup för den här sidan och försök igen.');
+  }
+}
+
+</script>
+</body>
+</html>

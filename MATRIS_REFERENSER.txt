@@ -1,0 +1,257 @@
+MATRIS_REFERENSER.txt
+Vetenskaplig dokumentation för korrelationsmatrisen i NeuroGuide Light
+Uppdaterad: 2026-06-01
+════════════════════════════════════════════════════════════════════════
+
+FORMAT:
+[VAR1 ↔ VAR2] Vikt: X.X | Evidensnivå: 1-3 (1=stark, 2=måttlig, 3=svag)
+Referens: Författare (år). Tidskrift.
+Mekanism: Förklaring.
+
+════════════════════════════════════════════════════════════════════════
+STARKA KORRELATIONER (vikt 7.0–10.0)
+════════════════════════════════════════════════════════════════════════
+
+[RAVLT DR ↔ MTA Vänster] Vikt: 9.0 | Evidensnivå: 1
+Referens: Scheltens P et al (1992). A semiquantative rating scale for the assessment of
+          signal hyperintensities on magnetic resonance imaging. J Neurol Sci 114:7-12.
+          Jack CR et al (1999). Prediction of AD with MRI-based hippocampal volume.
+          Neurology 52:1397-1403.
+Mekanism: RAVLT verbal inlärning och fördröjd återgivning är primärt beroende av
+          vänster hippocampus och entorhinalcortex. MTA-skalan (Scheltens) mäter
+          direkt atrofi i detta område. Korrelationen är starkast för fördröjd
+          återgivning (konsolideringsprocessen, CA1/subiculum-beroende).
+
+[BVMT-R DR ↔ MTA Höger] Vikt: 9.0 | Evidensnivå: 1
+Referens: Benedict RHB (1997). Brief Visuospatial Memory Test – Revised. PAR Inc.
+          Milner B (1968). Visual recognition and recall after right temporal-lobe excision.
+          Neuropsychologia 6:191-209.
+Mekanism: BVMT-R visuospatialt minne är primärt höger hippocampusberoende, speglande
+          RAVLT vänster. MTA höger fångar atrofi i exakt denna region. Bilateral MTA-
+          asymmetri är kliniskt meningsfull: vänster dominant → verbal amnesi (AD),
+          höger dominant → visuospatial amnesi.
+
+[RAVLT DR ↔ BVMT-R DR] Vikt: 7.5 | Evidensnivå: 1
+Referens: Lezak MD et al (2004). Neuropsychological Assessment (4th ed). Oxford.
+          Strauss E et al (2006). A Compendium of Neuropsychological Tests. Oxford.
+Mekanism: Båda mäter fördröjt episodiskt minne men i olika modaliteter (verbal vs
+          visuospatial). Delar hippocampusberoende men med lateralitetsskillnad.
+          r ≈ 0.45–0.55 i normalpopulationen. Förstärker varandra om BÅDA är nedsatta:
+          bilateral hippocampal dysfunktion bekräftad av oberoende mätinstrument.
+
+[Block_design ↔ Koedam] Vikt: 8.0 | Evidensnivå: 1
+Referens: Koedam ELGE et al (2011). Visual assessment of posterior atrophy development
+          of a MRI rating scale. Eur Radiol 21:2985-2992.
+          Whitwell JL et al (2007). Specific regions of the cingulate cortex linked to
+          episodic memory and executive function. Brain Res 1171:54-70.
+Mekanism: Koedam-skalan mäter atrofi i parietallob, precuneus och occipital cortex.
+          Blockmönster är ett av de mest parietalt känsliga WAIS-deltesten.
+          Förstärkningspar: strukturellt mått (Koedam) + funktionellt mått (Block design)
+          pekar på samma region → stark diagnostisk signal, särskilt vid DLB.
+
+[RCFT DR ↔ BVMT-R DR] Vikt: 8.0 | Evidensnivå: 1
+Referens: Meyers JE, Meyers KR (1995). Rey Complex Figure Test and Recognition Trial.
+          PAR Inc. Benedict RHB (1997). BVMT-R Professional Manual. PAR Inc.
+Mekanism: Båda mäter visuospatialt fördröjt minne. RCFT tillför organisationsförmåga
+          (frontal), BVMT-R är renare visuospatialt minnesmått. Konvergent nedsättning
+          bekräftar höger temporal-parietal dysfunktion.
+
+[TMT-B ↔ MTA Vänster] Vikt: 7.5 | Evidensnivå: 1
+Referens: Yamamoto Y et al (2022). Relationship between cognitive function assessed by
+          Trail Making Test and hippocampal volume. Psychogeriatrics 22(1):72-80.
+          DOI: 10.1111/psyg.12780. rho=0.823, p=0.003.
+          Bohbot VD et al (2004). Spatial memory deficits in patients with lesions to
+          the right hippocampus and to the right parahippocampal cortex. Neuropsychologia.
+Mekanism: Oväntad fynd: TMT-B, traditionellt betraktat som ett rent frontalt exekutivt
+          test, korrelerar starkt med hippocampusvolym. Förklaring: navigeringskomponenten
+          i TMT-B (hitta nästa bokstav/siffra i rumslig layout) kräver hippocampalt
+          stöd för rumslig uppmärksamhet och spatial working memory.
+
+[TMT-B ↔ FAS Total] Vikt: 7.0 | Evidensnivå: 1
+Referens: Henry JD, Crawford JR (2004). A meta-analytic review of verbal fluency
+          performance following focal cortical lesions. Neuropsychology 18:284-295.
+          Stuss DT et al (2001). Superior verbal fluency associated with DLPFC.
+          Brain Cogn 47:466-472.
+Mekanism: Kognitiv flexibilitet (TMT-B) och exekutiv initieringsförmåga (FAS) delar
+          DLPFC-beroende. Förstärkningspar: om båda nedsatta bekräftas frontal
+          exekutiv dysfunktion av oberoende mätmetoder.
+
+[Block_design ↔ BVMT-R Total] Vikt: 7.5 | Evidensnivå: 1
+Referens: Lezak MD (2004). Neuropsychological Assessment. Oxford University Press.
+          Milner B (1965). Visually-guided maze learning in man. Neuropsychologia 3:317-338.
+Mekanism: Visuospatial konstruktionsförmåga (Block design) och visuospatialt minne
+          (BVMT-R) delar parietallob höger substrat. Förstärker varandra.
+
+[Likheter ↔ Information] Vikt: 7.5 | Evidensnivå: 1
+Referens: Lezak MD (2004). Neuropsychological Assessment. Oxford University Press.
+          Cattell RB (1971). Abilities: Their structure, growth and action. Houghton Mifflin.
+Mekanism: Båda mäter kristalliserad intelligens med semantisk komponent. Temporal vänster
+          neocortex gemensamt substrat. Inte cirkulär korrelation: Likheter = abstraktion,
+          Information = faktakunskap. Konvergent nedsättning → semantisk cortex atrofi.
+
+[RCFT Kopia ↔ Koedam] Vikt: 7.0 | Evidensnivå: 1
+Referens: Koedam ELGE et al (2011). Visual assessment of posterior atrophy.
+          Eur Radiol 21:2985-2992.
+Mekanism: Kopiering av komplex figur kräver parietal-occipital koordinering.
+          Koedam-atrofi i exakt dessa regioner underminerar prestationen.
+
+[RCFT Kopia ↔ Block_design] Vikt: 7.5 | Evidensnivå: 1
+Referens: Lezak MD (2004). Meyers JE (1995). PAR Inc.
+Mekanism: Konstruktiv visuospatial förmåga gemensam; parietal-occipital substrat.
+          Förstärkningspar: om båda nedsatta bekräftas posterior kortikal dysfunktion.
+
+[Kodning ↔ TMT-A] Vikt: 7.0 | Evidensnivå: 1
+Referens: Joy S et al (2003). Speed of processing as a mediator of age effects on
+          neuropsychological performance. Neuropsychology 17:625-633.
+          Arbuthnott K, Frank J (2000). Trail Making Test, Part B as a measure of
+          executive control. J Clin Exp Neuropsychol 22:518-528.
+Mekanism: Psykomotorisk hastighet gemensam komponent. Striatum-thalamus-cortex-banor.
+          Förstärkningspar: subkortikalt saktar ner BÅDA om vit substans eller
+          striatum är patologiskt.
+
+[Koedam ↔ BVMT-R Total] Vikt: 7.0 | Evidensnivå: 1
+Referens: Koedam et al (2011). Smith ML, Milner B (1981). Brain 104:645-668.
+Mekanism: Parietal atrofi (Koedam) underminerar visuospatialt minne (BVMT-R).
+
+════════════════════════════════════════════════════════════════════════
+MÅTTLIGA KORRELATIONER (vikt 4.0–6.9)
+════════════════════════════════════════════════════════════════════════
+
+[Fazekas ↔ TMT-B] Vikt: 6.5 | Evidensnivå: 1
+Referens: Prins ND et al (2005). Cerebral white matter lesions and the risk of dementia.
+          Arch Neurol 62:1531-1534.
+          de Groot JC et al (2000). Cerebral white matter lesions and cognitive function.
+          Ann Neurol 47:145-151.
+Mekanism: Vitsubstansförändringar (Fazekas) stör frontostriatala och frontala assosiationsbaner
+          som är nödvändiga för exekutiv funktion. TMT-B känsligast för dessa störningar.
+
+[Fazekas ↔ Kodning] Vikt: 6.5 | Evidensnivå: 1
+Referens: Prins ND et al (2005). Longstreth WT et al (1996). Brain 119:1523-1536.
+Mekanism: Subkortikala banor (striatum-thalamus) nödvändiga för psykomotorisk snabbhet
+          störs av periventrikulär vitsubstanspatologi.
+
+[Fazekas ↔ TMT-A] Vikt: 6.0 | Evidensnivå: 1
+Referens: Prins ND et al (2005). Cerebral white matter lesions. Arch Neurol 62.
+Mekanism: Thalamo-kortikala banor påverkas av Fazekas, vilket sänker psykomotorisk hastighet.
+
+[GCA ↔ RAVLT DR] Vikt: 6.0 | Evidensnivå: 2
+Referens: Pasquier F et al (1996). Interobserver reproducibility of cerebral atrophy
+          assessment on MRI scans with hemispheric, lobar, sulcal and ventricular rating.
+          Eur Neurol 36:268-272.
+Mekanism: Global kortikal atrofi inkluderar temporala strukturer, indirekt
+          hippocampuspåverkan. Måttlig evidens: atrofigradering grov.
+
+[Likheter ↔ FAS Total] Vikt: 6.5 | Evidensnivå: 1
+Referens: Henry JD, Crawford JR (2004). Neuropsychology 18:284-295. Lezak MD (2004).
+Mekanism: Verbal abstraktion (Likheter) och ordflöde (FAS) delar frontal-temporal
+          vänster substrat. Inte cirkulär: olika kognitiva processer.
+
+[RAVLT Total ↔ MTA Vänster] Vikt: 7.5 | Evidensnivå: 1
+Referens: Jack CR et al (1999). Scoville WB, Milner B (1957). J Neurol Neurosurg Psych 20:11-21.
+Mekanism: Inlärningskapacitet kräver hippocampal inkodning. Vänster dominant för verbal inlärning.
+
+[RAVLT DR ↔ MTA Höger] Vikt: 6.5 | Evidensnivå: 2
+Referens: Jack CR et al (1999). Squire LR (1992). Psychological Review 99:195-231.
+Mekanism: Bilateral hippocampusfunktion vid konsolidering; RAVLT vänster dominant
+          men höger bidrar till konsolidering av verbalt material.
+
+[Djurnamn ↔ RAVLT Total] Vikt: 6.5 | Evidensnivå: 2
+Referens: Hodges JR, Patterson K (1995). Is semantic memory consistently impaired early
+          in the course of AD? Neuropsychologia 33:441-459.
+          Garrard P et al (2005). The effects of very early AD on the characteristics
+          of writing by a renowned author. Brain 128:250-260.
+Mekanism: Semantisk produktion (djurnamn, anterior temporal) och episodiskt minne
+          (hippocampus) interagerar i temporal vänster. Distinkt nedsättning av djurnamn
+          vid semantisk demens, episodiskt minne relativt bevarat → differentierande.
+
+[TMT-B ↔ MTA Höger] Vikt: 5.0 | Evidensnivå: 2
+Referens: Yamamoto Y et al (2022). Psychogeriatrics.
+Mekanism: Delvis: hippocampal volym total (inkl. höger) korrelerar med TMT-B.
+
+════════════════════════════════════════════════════════════════════════
+SVAGA KORRELATIONER (vikt 1.0–3.9)
+════════════════════════════════════════════════════════════════════════
+
+[RAVLT DR ↔ Block_design] Vikt: 3.0 | Evidensnivå: 3
+Referens: Lezak MD (2004). Neuropsychological Assessment. Oxford.
+Mekanism: Olika modaliteter och neurala substrat. Verbal episodisk minnesförmåga
+          och visuospatial konstruktion är i stora drag oberoende. Svag korrelation
+          i normalpopulationen.
+
+[FAS Total ↔ BVMT-R DR] Vikt: 2.5 | Evidensnivå: 3
+Referens: Lezak MD (2004). Neuropsychological Assessment. Oxford.
+Mekanism: Frontal verbal initieringsförmåga och höger hippocampalt visuospatialt
+          minne är separata system med minimalt funktionellt överlapp.
+
+════════════════════════════════════════════════════════════════════════
+EXKLUDERADE PAR (aldrig förstärkningsvikt)
+════════════════════════════════════════════════════════════════════════
+
+RAVLT-familjen (RAVLT total / DR / Igenkänning):
+  Cirkulär korrelation – alla mäter episodiskt verbalt minne via
+  samma testsession och stimulusmaterial.
+
+BVMT-R familjen (BVMT total / DR / Igenkänning):
+  Cirkulär korrelation – alla mäter visuospatialt minne via
+  samma testsession.
+
+RCFT-paret (Kopia / Fördröjd ÅG):
+  Kopia = kopieringsprestanda, Fördröjd = minne av kopian.
+  Överlappande – nedsatt kopia predikterar nedsatt minne trivialt.
+
+TMT-familjen (TMT-A / TMT-B / B:A-kvot):
+  TMT-B och B:A-kvot deriveras matematiskt från TMT-A och TMT-B.
+  Intern redunans – förstärkningsvikt vore cirkulär.
+
+Sifferrepetitionsparet (Framlänges / Baklänges):
+  Samma testsession, korrekta poäng är delvis kumulativa.
+  Baklänges inkluderar framlänges-kapacitet.
+
+MTA-paret (Höger / Vänster):
+  Båda mäter hippocampalAtrofi strukturellt, bara olika hemisfärer.
+  Förstärkningsvikt trivial – en patient med bilateral MTA har per
+  definition höga värden på båda. Klinisk tolkning: asymmetri, ej addition.
+
+════════════════════════════════════════════════════════════════════════
+DIAGNOSTISKA MATRISMÖNSTER – EVIDENSBAS
+════════════════════════════════════════════════════════════════════════
+
+AD (Alzheimers sjukdom):
+  Referens: Jack CR et al (2018). NIA-AA Research Framework. Alzheimers Dement 14:535-562.
+            Blennow K et al (2015). CSF biomarkers for Alzheimer disease. Nat Rev Neurol 11:201.
+  Karaktäristik: RAVLT DR nedsatt (sens 0.88), MTA bilateral (sens 0.85),
+                 BVMT DR nedsatt, Djurnamn nedsatt.
+
+DLB (Demens med Lewykroppar):
+  Referens: McKeith IG et al (2017). Diagnosis of DLB (4th consensus report). Neurology.
+            Cahn-Weiner DA et al (2002). Clin Neuropsychologist 16:44-52.
+  Karaktäristik: Block_design disproportionellt nedsatt (sens 0.78, spec 0.82),
+                 Koedam förhöjd, BVMT-R total nedsatt, RAVLT relativt bevarat.
+
+bvFTD:
+  Referens: Rascovsky K et al (2011). Sensitivity of revised diagnostic criteria for
+            the behavioural variant of frontotemporal dementia. Brain 134:2456-2477.
+  Karaktäristik: FAS nedsatt, TMT-B nedsatt, TMT B:A-kvot > 3.0,
+                 Episodiskt minne relativt bevarat tidigt.
+
+VaD (Vaskulär demens):
+  Referens: Erkinjuntti T et al (2000). Research criteria for subcortical VaD.
+            J Neural Transm 107:1-20.
+  Karaktäristik: Fazekas förhöjd, Kodning nedsatt, TMT-A nedsatt,
+                 Subkortikal profil.
+
+════════════════════════════════════════════════════════════════════════
+EVIDENSNIVÅER
+════════════════════════════════════════════════════════════════════════
+
+Nivå 1 (stark): Direkt empirisk evidens, publicerade korrelationskoefficienter
+               eller metaanalyser. Neuroanatomisk mekanism välbelagd.
+
+Nivå 2 (måttlig): Indirekt evidens, klinisk konsensus eller rimlig mekanistisk
+                  grund. Begränsad direktstudie av just detta korrelationspar.
+
+Nivå 3 (svag): Teoretisk grund, klinisk erfarenhet. Korrelationen är svag
+               eller inkonsekvent i litteraturen. Ingår för fullständighetens skull.
+
+════════════════════════════════════════════════════════════════════════
+NeuroGuide Light · NUS Umeå · Geriatriskt Centrum

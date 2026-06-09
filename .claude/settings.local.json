@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python modules\\\\matris_setup.py)",
+      "Skill(run)",
+      "Skill(run:*)",
+      "Bash(curl -s http://127.0.0.1:5010/)",
+      "Bash(curl -s -X POST http://127.0.0.1:5010/matris_analys -H \"Content-Type: application/json\" -d \"{\\\\\"tscorer\\\\\":{\\\\\"ravlt_dr_t\\\\\":25,\\\\\"bvmt_dr_t\\\\\":30,\\\\\"tmt_b_t\\\\\":50},\\\\\"bilddiagnostik\\\\\":{\\\\\"mta_h\\\\\":3,\\\\\"mta_v\\\\\":3},\\\\\"alder\\\\\":70}\")",
+      "Bash(python -X utf8 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('avvikelser:', d['avvikelser']\\); print\\('n_patol:', d['n_patologiska']\\); print\\('n_par:', d['n_forstarkta_par']\\)\")",
+      "mcp__Claude_in_Chrome__tabs_context_mcp",
+      "PowerShell($body = '{\"tscorer\":{\"ravlt_total_t\":28,\"ravlt_dr_t\":25,\"bvmt_total_t\":35,\"tmt_a_t\":38,\"tmt_b_t\":32},\"bilddiagnostik\":{\"mta_h\":2,\"mta_v\":2}}'; \\(Invoke-WebRequest -Uri http://127.0.0.1:5010/diagnos_matris_analys -Method POST -Body $body -ContentType \"application/json\" -UseBasicParsing\\).Content)"
+    ]
+  }
+}
