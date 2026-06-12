@@ -93,6 +93,25 @@ _RAVLT_C = dict(
     tB=dict(b=0.181328, edu=0.053071, sex=-0.414812, sd=1.673211),
 )
 
+# ─── RAVLT INLÄRNINGSINDEX (LOT – Learning Over Trials) ───────────────────────
+# Ivnik, Malec, Tangalos, Petersen, Kokmen, Kurland – Table 6, s. 310 (Mayo).
+# LOT = (T1+T2+T3+T4+T5) − (5 × T1). Percentilområde slås upp per mittpunktsålder.
+# LOT_NORMS: mittpunktsålder → minsta råpoäng (inkl.) för varje percentilband,
+# ordnade högsta→lägsta band (se LOT_BANDS). Högsta band vars tröskel ≤ LOT väljs.
+LOT_BANDS = ['90–100','80–89','70–79','60–69','50–59','40–49','30–39','20–29','10–19','0–9']
+LOT_NORMS = {
+    61: [26, 23, 22, 20, 19, 17, 16, 14, 10, 0],
+    64: [26, 23, 21, 19, 18, 16, 14, 12,  9, 0],
+    67: [26, 23, 21, 19, 17, 15, 14, 11,  9, 0],
+    70: [25, 21, 20, 18, 16, 14, 13, 10,  8, 0],
+    73: [24, 21, 19, 17, 15, 14, 11, 10,  8, 0],
+    76: [25, 21, 19, 17, 15, 13, 11,  9,  7, 0],
+    79: [24, 21, 19, 17, 13, 11, 10,  9,  6, 0],
+    82: [25, 22, 18, 16, 13, 11, 10,  9,  6, 0],
+    85: [25, 22, 18, 16, 14, 12, 11,  9,  6, 0],
+    90: [23, 19, 18, 15, 12, 11, 11,  9,  5, 0],
+}
+
 # FIX [VA-3]: Max-ålder i normer är 72. Patienter 73+ normeras mot 72-åringars data.
 BVMT_NORMS = {
     'total': {
@@ -323,6 +342,31 @@ def ravlt_t(raw, domain, age, sex=None, edu=None):
     z = (raw - pred) / sd
     return round(max(20, min(80, 50 + 10 * z)), 1)
 
+def lot_percentil(lot, age):
+    """RAVLT inlärningsindex (LOT) → percentilband enligt Ivnik Table 6.
+    Returnerar (bandtext, mittpunktsålder) eller None om lot saknas."""
+    if lot is None:
+        return None
+    midpoints = sorted(LOT_NORMS.keys())
+    # Välj kolumn med närmaste mittpunktsålder
+    mid = min(midpoints, key=lambda m: abs(m - age))
+    troskel = LOT_NORMS[mid]
+    for i, low in enumerate(troskel):
+        if lot >= low:
+            return (LOT_BANDS[i], mid)
+    return (LOT_BANDS[-1], mid)
+
+def lot_color_label(band):
+    """Percentilband → (rc-färgklass, etikett) för resultattabellen."""
+    if band is None:
+        return ('gray', '—')
+    low = int(band.split('–')[0])
+    if low >= 25:   color = 'green'
+    elif low >= 16: color = 'yellow'
+    elif low >= 10: color = 'orange'
+    else:           color = 'red'
+    return (color, f'Pc {band}')
+
 def bvmt_t(raw, domain, age):
     norms = BVMT_NORMS.get(domain, {})
     key = get_age_key(norms, age)
@@ -437,6 +481,19 @@ def berakna():
             ret = round((res["ravlt_dr"] / t5) * 100, 1)
             res["ravlt_retention_pct"] = ret
             res["ravlt_retention_ok"] = ret >= 80
+    # RAVLT Inlärningsindex (LOT) = (T1+T2+T3+T4+T5) − 5×T1, Ivnik Table 6
+    if all(d.get(f"ravlt_{i}") not in (None,"") for i in range(1,6)):
+        tvals = [int(d.get(f"ravlt_{i}")) for i in range(1,6)]
+        lot = sum(tvals) - 5 * tvals[0]
+        band_mid = lot_percentil(lot, age)
+        if band_mid is not None:
+            band, mid = band_mid
+            c, l = lot_color_label(band)
+            res["ravlt_lot"] = lot
+            res["ravlt_lot_pct"] = band
+            res["ravlt_lot_age"] = mid
+            res["ravlt_lot_color"] = c
+            res["ravlt_lot_label"] = l
 
     # BVMT-R
     bvals=[int(d.get(f"bvmt_{i}")) for i in range(1,4) if d.get(f"bvmt_{i}") not in (None,"")]
