@@ -826,7 +826,7 @@ main::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.14); border-radius: 3px
     <div class="card">
       <div class="card-header">🕸️ Differentialdiagnos – spindeldiagram</div>
       <div class="card-body">
-        <div class="chart-wrap" style="height:420px"><canvas id="diagnosSpindel"></canvas></div>
+        <div class="chart-wrap" style="height:420px"><canvas id="diagnosSpindelDM"></canvas></div>
         <div style="font-size:11px;color:var(--sub);margin-top:6px">
           Axlarna representerar de 17 demenssjukdomarna. Värdet = matchningsprocent (0–100%).
           Referenslinje vid 20% (kliniskt relevant tröskel).
@@ -1286,10 +1286,12 @@ const _DIAG_INFO = {
   'Mixed':     { kort: 'Blandad',    kat: '#3ecf8e', fullnamn: 'Blandad demens (AD+VaD)' },
 };
 
-let diagnosSpindelChart = null;
+let _diagSpindelCharts = {};
 
-function ritaDiagnosSpindel(scores) {
-  const canvas = document.getElementById('diagnosSpindel');
+function ritaDiagnosSpindel(scores, canvasId, rankPanelId) {
+  canvasId = canvasId || 'diagnosSpindel';
+  if (rankPanelId === undefined) rankPanelId = 'diagnosRankPanel';
+  const canvas = document.getElementById(canvasId);
   if (!canvas || !scores) return;
 
   const keys   = Object.keys(_DIAG_INFO);
@@ -1308,8 +1310,8 @@ function ritaDiagnosSpindel(scores) {
   });
   const ptRadius = data.map(v => v >= 30 ? 5 : v >= 15 ? 3 : 2);
 
-  if (diagnosSpindelChart) diagnosSpindelChart.destroy();
-  diagnosSpindelChart = new Chart(canvas, {
+  if (_diagSpindelCharts[canvasId]) _diagSpindelCharts[canvasId].destroy();
+  _diagSpindelCharts[canvasId] = new Chart(canvas, {
     type: 'radar',
     data: {
       labels,
@@ -1372,7 +1374,7 @@ function ritaDiagnosSpindel(scores) {
   });
 
   // Rankningspanel
-  const rankEl = document.getElementById('diagnosRankPanel');
+  const rankEl = rankPanelId ? document.getElementById(rankPanelId) : null;
   if (!rankEl) return;
   const ranked = keys
     .map((k, i) => ({ k, score: data[i] }))
@@ -2603,7 +2605,7 @@ function visaDiagnosMatchning(scores) {
   }
 
   // Spindeldiagram
-  ritaDiagnosSpindel(scores, diagInfo);
+  ritaDiagnosSpindel(scores, 'diagnosSpindelDM', null);
 }
 
 let _diagnosSpindelChart = null;
