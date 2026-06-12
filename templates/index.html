@@ -2915,20 +2915,47 @@ function oppnaProfil() {
     rgba(41,128,185,.08) 66.67%,rgba(41,128,185,.08) 83.33%,
     rgba(26,82,118,.10) 83.33%)`;
 
+  // Percentil-band → T-position på klockkurvan (Acklam invers normalfördelning).
+  // Klockkurvan är redan en percentilskala: T40≈16:e, T50=50:e, T60≈84:e percentilen.
+  const _invNorm = p => {
+    const a=[-3.969683028665376e+01,2.209460984245205e+02,-2.759285104469687e+02,1.383577518672690e+02,-3.066479806614716e+01,2.506628277459239e+00];
+    const b=[-5.447609879822406e+01,1.615858368580409e+02,-1.556989798598866e+02,6.680131188771972e+01,-1.328068155288572e+01];
+    const c=[-7.784894002430293e-03,-3.223964580411365e-01,-2.400758277161838e+00,-2.549732539343734e+00,4.374664141464968e+00,2.938163982698783e+00];
+    const d=[7.784695709041462e-03,3.224671290700398e-01,2.445134137142996e+00,3.754408661907416e+00];
+    const pl=0.02425, ph=1-pl; let q,r;
+    if(p<pl){ q=Math.sqrt(-2*Math.log(p)); return (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1); }
+    if(p<=ph){ q=p-0.5; r=q*q; return (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q/(((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1); }
+    q=Math.sqrt(-2*Math.log(1-p)); return -(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);
+  };
+  const bandToT = band => {
+    if(band===null || band===undefined || band==='') return null;
+    const s = String(band).trim().replace(/[–—]/g,'-'); // normalisera en/em-dash
+    let p;
+    if(s[0]==='>')      p = 50;                       // t.ex. >16 = inom normalområdet
+    else if(s[0]==='<') p = parseFloat(s.slice(1))/2; // t.ex. <1 → 0.5
+    else {
+      const m = s.split('-').map(x => parseFloat(x.replace(/[^0-9.]/g,'')));
+      p = (m.length===2 && !isNaN(m[0]) && !isNaN(m[1])) ? (m[0]+m[1])/2 : parseFloat(s);
+    }
+    if(p===null || isNaN(p)) return null;
+    const z = _invNorm(Math.min(99.9, Math.max(0.1, p))/100);
+    return Math.max(20, Math.min(80, 50 + 10*z));
+  };
+
   const rows = [
     {cat:'MINNE'},
     {lbl:'RCFT omedelbar ÅG',        rp:fmt(res.rcft_3min),                              t:res.rcft_3min_t},
     {lbl:'RCFT fördröjd ÅG',         rp:fmt(res.rcft_30min),                             t:res.rcft_30min_t},
     {lbl:'RCFT igenk. (SP / FP)',     rp:rcftIgenk},
     {lbl:'RAVLT tot',                 rp:fmt(res.ravlt_total),                            t:res.ravlt_total_t},
-    {lbl:'RAVLT inlärn. (Trial 1)',   rp:fmt(ravlt1)},
+    {lbl:'RAVLT inlärn. (Trial 1)',   rp:fmt(ravlt1),                                     plotT:bandToT(res.ravlt_lot_pct)},
     {lbl:'RAVLT fördröjd ÅG',        rp:fmt(res.ravlt_dr),                               t:res.ravlt_dr_t},
-    {lbl:'RAVLT retention %',        rp:ravltRetVal, note:ravltRetKom},
+    {lbl:'RAVLT retention %',        rp:ravltRetVal, note:ravltRetKom,                   plotT:bandToT(res.ravlt_stpr_pct)},
     {lbl:'BVMT-R tot. återg.',        rp:fmt(res.bvmt_total),                             t:res.bvmt_total_t},
     {lbl:'BVMT-R inlärn. (Trial 1)',  rp:fmt(bvmt1)},
     {lbl:'BVMT-R fördröjd ÅG',       rp:fmt(res.bvmt_dr),                                t:res.bvmt_dr_t},
-    {lbl:'BVMT reten %',              rp:bvmtReten},
-    {lbl:'BVMT igenkänning index',    rp:bvmtIgenk},
+    {lbl:'BVMT reten %',              rp:bvmtReten,                                       plotT:bandToT(res.bvmt_pr_pc)},
+    {lbl:'BVMT igenkänning index',    rp:bvmtIgenk,                                       plotT:bandToT(res.bvmt_di_pc)},
     {lbl:'Information',               rp:fmt(res.info_raw),   vs:fmt(res.info_skalp),     t:res.info_t},
     {lbl:'Sifferrepetition',          rp:fmt(res.siff_raw_total), vs:fmt(res.siff_skalp), t:res.siff_t},
     {cat:'VISUOSPATIAL FÖRMÅGA'},
@@ -2951,9 +2978,11 @@ function oppnaProfil() {
   const rowsHTML = rows.map(row => {
     if (row.cat) { di=0; return `<div class="cat">${row.cat}</div>`; }
     const t    = (row.t !== null && row.t !== undefined && row.t !== '') ? row.t : null;
-    const pct  = tPct(t);
+    // Positionskälla: riktig T-poäng om den finns, annars percentilhärledd plotT
+    const pt   = (row.plotT !== null && row.plotT !== undefined && row.plotT !== '') ? row.plotT : t;
+    const pct  = tPct(pt);
     const dot  = pct !== null
-      ? `<div class="dot" style="left:${pct}%;background:${tCol(t)}" title="T=${tFmt(t)}"></div>` : '';
+      ? `<div class="dot" style="left:${pct}%;background:${tCol(pt)}" title="T=${tFmt(pt)}"></div>` : '';
     const tCell = t !== null ? `<b style="color:${tCol(t)}">${tFmt(t)}</b>` : '';
     const bg    = di++ % 2 === 0 ? '#fff' : '#f5f6f8';
     const noteHtml = row.note ? `<span style="display:block;font-size:9.5px;color:#888;margin-top:1px">${row.note}</span>` : '';
@@ -3018,8 +3047,42 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:11.5px;color:#1a1a1a;backg
   }
   function pctToT(pct){ return Math.round(20 + pct/100*60); }
 
+  // Rak linje mellan profilens plottpunkter (i radordning, uppifrån och ned)
+  function ritaProfilLinje(){
+    const page = document.querySelector('.page');
+    if(!page) return;
+    page.style.position = 'relative';
+    const gammal = document.getElementById('profilLinjeSvg');
+    if(gammal) gammal.remove();
+    const dots = Array.from(document.querySelectorAll('.cv .dot'))
+      .filter(function(d){ return !d.classList.contains('dot-manual'); });
+    if(dots.length < 2) return;
+    const pr = page.getBoundingClientRect();
+    const pts = dots.map(function(d){
+      const r = d.getBoundingClientRect();
+      return (r.left + r.width/2 - pr.left).toFixed(1) + ',' + (r.top + r.height/2 - pr.top).toFixed(1);
+    });
+    const NS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('id', 'profilLinjeSvg');
+    svg.setAttribute('style', 'position:absolute;left:0;top:0;pointer-events:none;z-index:1;overflow:visible;'
+      + 'width:'+pr.width+'px;height:'+pr.height+'px');
+    const poly = document.createElementNS(NS, 'polyline');
+    poly.setAttribute('points', pts.join(' '));
+    poly.setAttribute('fill', 'none');
+    poly.setAttribute('stroke', '#2c3e50');
+    poly.setAttribute('stroke-width', '1.2');
+    poly.setAttribute('stroke-opacity', '0.6');
+    svg.appendChild(poly);
+    page.insertBefore(svg, page.firstChild);
+  }
+
   document.addEventListener('DOMContentLoaded', function(){
     document.body.style.paddingTop = '34px';
+    setTimeout(ritaProfilLinje, 50);
+    window.addEventListener('resize', ritaProfilLinje);
+    window.addEventListener('beforeprint', ritaProfilLinje);
+    if(window.matchMedia){ try{ window.matchMedia('print').addEventListener('change', function(){ setTimeout(ritaProfilLinje, 0); }); }catch(e){} }
     document.querySelectorAll('.cv').forEach(function(cv){
       cv.style.cursor = 'crosshair';
       cv.title = 'Klicka för att placera markering manuellt';
