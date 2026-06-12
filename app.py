@@ -146,6 +146,59 @@ BVMT_RESPONSE_BIAS = [
     [0.50, 0.75, 0.83, 0.88, 0.90, 0.92, 0.93],  # Hits 6
 ]
 
+# ─── BVMT-R RECOGNITION VARIABLES – percentilnormer per mittpunktsålder ───────
+# Ivnik et al. Varje variabel → lista (percentilband, lo, hi), bäst→sämst.
+# Riktning: 'high' = högre råvärde är bättre, 'low' = lägre är bättre.
+# Patientvärdet mappas till det percentilband det når (gap rundas mot lägre band).
+RECOG_DIR = {
+    'percent_retained': 'high', 'hits': 'high', 'discrimination_index': 'high',
+    'false_alarms': 'low', 'response_bias': 'low',
+}
+# Percent Retained-mönster
+_PR_A = [('>16',89,100),('11-16',81,88),('6-10',75,80),('3-5',70,74),('<1',0,69)]
+_PR_B = [('>16',83,100),('11-16',80,82),('6-10',75,79),('3-5',70,74),('<1',0,69)]
+_PR_C = [('>16',83,100),('11-16',78,82),('6-10',75,77),('3-5',70,74),('<1',0,69)]
+_PR_D = [('>16',82,100),('11-16',71,81),('6-10',68,70),('3-5',57,67),('<1',0,56)]
+_PR_E = [('>16',80,100),('11-16',71,79),('6-10',68,70),('3-5',57,67),('<1',0,56)]
+_PR_F = [('>16',80,100),('11-16',71,79),('6-10',67,70),('3-5',57,66),('<1',0,56)]
+_PR_G = [('>16',75,100),('11-16',71,74),('6-10',55,70),('3-5',50,54),('<1',0,49)]
+# Hits-mönster
+_H_A = [('>16',6,6),('11-16',5,5),('3-5',4,4),('1-2',3,3),('<1',0,2)]
+_H_B = [('>16',6,6),('11-16',5,5),('6-10',4,4),('3-5',3,3),('1-2',2,2),('<1',0,1)]
+_H_C = [('>16',5,6),('6-10',4,4),('3-5',2,3),('<1',0,1)]
+# False Alarms-mönster (lägre bättre)
+_FA_A = [('>16',0,0),('3-5',1,1),('<1',2,6)]
+_FA_B = [('>16',0,0),('6-10',1,1),('<1',2,6)]
+_FA_C = [('>16',0,0),('11-16',1,1),('<1',2,6)]
+# Discrimination Index-mönster
+_DI_A = [('>16',6,6),('11-16',5,5),('3-5',4,4),('1-2',3,3),('<1',-6,2)]
+_DI_B = [('>16',6,6),('11-16',5,5),('6-10',4,4),('3-5',3,3),('1-2',2,2),('<1',-6,1)]
+_DI_C = [('>16',5,6),('11-16',4,4),('3-5',2,3),('<1',-6,1)]
+# Response Bias-mönster (lägre bättre)
+_RB_A = [('>16',0.00,0.50),('6-10',0.51,0.63),('3-5',0.64,0.75),('<1',0.76,1.00)]
+_RB_B = [('>16',0.00,0.50),('6-10',0.51,0.66),('3-5',0.67,0.75),('<1',0.76,1.00)]
+_RB_C = [('>16',0.00,0.50),('6-10',0.51,0.58),('3-5',0.59,0.75),('<1',0.76,1.00)]
+_RB_D = [('>16',0.00,0.50),('6-10',0.51,0.55),('3-5',0.56,0.75),('<1',0.76,1.00)]
+def _recog(pr, h, fa, di, rb):
+    return {'percent_retained':pr,'hits':h,'false_alarms':fa,
+            'discrimination_index':di,'response_bias':rb}
+# mittpunktsålder → variabelmönster (Ivnik recognition-tabeller, 50–75)
+BVMT_RECOG_NORMS = {
+    50: _recog(_PR_A,_H_A,_FA_A,_DI_A,_RB_A),
+    52: _recog(_PR_A,_H_A,_FA_A,_DI_A,_RB_B),
+    54: _recog(_PR_B,_H_A,_FA_B,_DI_A,_RB_B),
+    56: _recog(_PR_B,_H_A,_FA_B,_DI_B,_RB_B),
+    58: _recog(_PR_C,_H_A,_FA_B,_DI_B,_RB_B),
+    60: _recog(_PR_D,_H_A,_FA_B,_DI_B,_RB_B),
+    62: _recog(_PR_E,_H_B,_FA_B,_DI_B,_RB_B),
+    64: _recog(_PR_E,_H_B,_FA_B,_DI_B,_RB_B),
+    66: _recog(_PR_E,_H_B,_FA_B,_DI_B,_RB_C),
+    68: _recog(_PR_E,_H_C,_FA_C,_DI_C,_RB_D),
+    70: _recog(_PR_F,_H_C,_FA_C,_DI_C,_RB_D),
+    72: _recog(_PR_G,_H_C,_FA_C,_DI_C,_RB_D),
+    75: _recog(_PR_G,_H_C,_FA_C,_DI_C,_RB_D),
+}
+
 # FIX [VA-3]: Max-ålder i normer är 72. Patienter 73+ normeras mot 72-åringars data.
 BVMT_NORMS = {
     'total': {
@@ -435,6 +488,28 @@ def bvmt_response_bias(hits, false_alarms):
         color, etikett = 'green', f'Neutral ({rb:.2f})'
     return (rb, color, etikett)
 
+def bvmt_recog_percentil(var, value, age):
+    """BVMT-R recognition-variabel → percentilband (Ivnik). var ∈ RECOG_DIR.
+    Returnerar (band, färgklass, etikett) eller None."""
+    if value is None or var not in RECOG_DIR:
+        return None
+    mid = min(BVMT_RECOG_NORMS.keys(), key=lambda m: abs(m - age))
+    spec = BVMT_RECOG_NORMS[mid].get(var)
+    if not spec:
+        return None
+    band = spec[-1][0]
+    if RECOG_DIR[var] == 'high':
+        for b, lo, hi in spec:        # bäst→sämst, högre råvärde bättre
+            if value >= lo:
+                band = b; break
+    else:                              # lägre råvärde bättre (FA, response bias)
+        for b, lo, hi in spec:
+            if value <= hi:
+                band = b; break
+    farg = {'>16':'green','11-16':'green','6-10':'yellow',
+            '3-5':'orange','1-2':'red','<1':'red'}.get(band, 'gray')
+    return (band, farg, f'Pc {band}')
+
 def flode_t(raw, test, age, utb='A'):
     norm = FLODE_NORMS.get(utb, FLODE_NORMS['A'])
     key = get_age_key(norm, age)
@@ -591,6 +666,10 @@ def berakna():
             ret = round((res["bvmt_dr"] / t3) * 100, 1)
             res["bvmt_retention_pct"] = ret
             res["bvmt_retention_ok"] = ret >= 70
+            # Percent Retained-percentil (Ivnik recognition-norm)
+            pr = bvmt_recog_percentil('percent_retained', ret, age)
+            if pr is not None:
+                res["bvmt_pr_pc"], res["bvmt_pr_pc_color"], res["bvmt_pr_pc_label"] = pr
     # BVMT Igenkänning Index = Hits − Falsklarm, referens ≥9
     bsp = d.get("bvmt_rek_sp"); bfp = d.get("bvmt_rek_fp")
     if bsp not in (None,"") and bfp not in (None,""):
@@ -601,6 +680,16 @@ def berakna():
             res["bvmt_response_bias"] = rb[0]
             res["bvmt_response_bias_color"] = rb[1]
             res["bvmt_response_bias_label"] = rb[2]
+        # Percentiler för igenkänningsvariabler (Ivnik recognition-norm)
+        hits = int(bsp); fa = int(bfp); di = hits - fa
+        rb_val = rb[0] if rb is not None else None
+        for var, val, key in [('hits', hits, 'bvmt_hits'),
+                              ('false_alarms', fa, 'bvmt_fa'),
+                              ('discrimination_index', di, 'bvmt_di'),
+                              ('response_bias', rb_val, 'bvmt_rb')]:
+            pc = bvmt_recog_percentil(var, val, age)
+            if pc is not None:
+                res[key+"_pc"], res[key+"_pc_color"], res[key+"_pc_label"] = pc
 
     # RCFT
     for key, domain in [("rcft_kop","kopia"),("rcft_3min","omedelbar"),("rcft_30min","fordrojd")]:
