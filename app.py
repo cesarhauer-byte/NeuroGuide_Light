@@ -493,7 +493,8 @@ def bvmt_recog_percentil(var, value, age):
     Returnerar (band, färgklass, etikett) eller None."""
     if value is None or var not in RECOG_DIR:
         return None
-    mid = min(BVMT_RECOG_NORMS.keys(), key=lambda m: abs(m - age))
+    # Närmaste mittpunktsålder; vid gränsfall (lika avstånd) väljs ÄLDRE gruppen
+    mid = min(BVMT_RECOG_NORMS.keys(), key=lambda m: (abs(m - age), -m))
     spec = BVMT_RECOG_NORMS[mid].get(var)
     if not spec:
         return None
