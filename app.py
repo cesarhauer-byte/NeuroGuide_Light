@@ -132,6 +132,20 @@ STPR_NORMS = {
     90: [ 91,  89, 83, 80, 71, 65, 57, 47, 40, 0],
 }
 
+# ─── BVMT-R RESPONSE BIAS (igenkänning) ──────────────────────────────────────
+# Response Bias Look-up Table: rad = Hits (0–6), kolumn = False Alarms (0–6).
+# Värde nära .50 = neutral, lågt = konservativ tendens, högt = liberal tendens.
+BVMT_RESPONSE_BIAS = [
+    # FA:  0     1     2     3     4     5     6
+    [0.07, 0.19, 0.28, 0.35, 0.41, 0.46, 0.50],  # Hits 0
+    [0.08, 0.21, 0.31, 0.39, 0.45, 0.50, 0.54],  # Hits 1
+    [0.10, 0.25, 0.36, 0.44, 0.50, 0.55, 0.59],  # Hits 2
+    [0.13, 0.30, 0.42, 0.50, 0.56, 0.61, 0.65],  # Hits 3
+    [0.17, 0.38, 0.50, 0.58, 0.64, 0.69, 0.72],  # Hits 4
+    [0.25, 0.50, 0.63, 0.70, 0.75, 0.79, 0.81],  # Hits 5
+    [0.50, 0.75, 0.83, 0.88, 0.90, 0.92, 0.93],  # Hits 6
+]
+
 # FIX [VA-3]: Max-ålder i normer är 72. Patienter 73+ normeras mot 72-åringars data.
 BVMT_NORMS = {
     'total': {
@@ -405,6 +419,22 @@ def bvmt_t(raw, domain, age):
     mean, sd = norms[key]
     return mean_sd_to_t(raw, mean, sd)
 
+def bvmt_response_bias(hits, false_alarms):
+    """BVMT-R response bias ur uppslagstabellen. Hits/FA klampas till 0–6.
+    Returnerar (kvot, färgklass, etikett) eller None om värde saknas."""
+    if hits is None or false_alarms is None:
+        return None
+    h = max(0, min(6, int(hits)))
+    f = max(0, min(6, int(false_alarms)))
+    rb = BVMT_RESPONSE_BIAS[h][f]
+    if rb < 0.40:
+        color, etikett = 'yellow', f'Konservativ tendens ({rb:.2f})'
+    elif rb > 0.60:
+        color, etikett = 'yellow', f'Liberal tendens ({rb:.2f})'
+    else:
+        color, etikett = 'green', f'Neutral ({rb:.2f})'
+    return (rb, color, etikett)
+
 def flode_t(raw, test, age, utb='A'):
     norm = FLODE_NORMS.get(utb, FLODE_NORMS['A'])
     key = get_age_key(norm, age)
@@ -566,6 +596,11 @@ def berakna():
     if bsp not in (None,"") and bfp not in (None,""):
         res["bvmt_rek_index"] = int(bsp) - int(bfp)
         res["bvmt_rek_index_ok"] = res["bvmt_rek_index"] >= 9
+        rb = bvmt_response_bias(int(bsp), int(bfp))
+        if rb is not None:
+            res["bvmt_response_bias"] = rb[0]
+            res["bvmt_response_bias_color"] = rb[1]
+            res["bvmt_response_bias_label"] = rb[2]
 
     # RCFT
     for key, domain in [("rcft_kop","kopia"),("rcft_3min","omedelbar"),("rcft_30min","fordrojd")]:

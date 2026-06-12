@@ -1009,6 +1009,7 @@ function byggResultatRader(res) {
     ...(res.bvmt_retention_pct !== undefined ? [{lbl:'BVMT-R Retention % (DR/T3)', raw:res.bvmt_retention_pct + ' %', skalp:null, t:null, color:res.bvmt_retention_ok?'green':'orange', label:res.bvmt_retention_ok?'✅ Normalt ≥70%':'⚠️ Nedsatt <70%'}] : []),
     ...(res.bvmt_learning_index !== undefined ? [{lbl:'BVMT-R Inlärningsindex (T3−T1)', raw:res.bvmt_learning_index, skalp:null, t:null, color:res.bvmt_learning_ok?'green':'yellow', label:res.bvmt_learning_ok?'✅ Normal kurva ≥3':'⚠️ Planare kurva <3'}] : []),
     ...(res.bvmt_rek_index !== undefined ? [{lbl:'BVMT-R Igenkänning Index (H−FA)', raw:res.bvmt_rek_index, skalp:null, t:null, color:res.bvmt_rek_index_ok?'green':'orange', label:res.bvmt_rek_index_ok?'✅ Normalt ≥9':'⚠️ Under referens <9'}] : []),
+    ...(res.bvmt_response_bias !== undefined ? [{lbl:'BVMT-R Response bias (igenkänning)', raw:res.bvmt_response_bias.toFixed(2), skalp:null, t:null, color:res.bvmt_response_bias_color, label:res.bvmt_response_bias_label}] : []),
     {lbl:'RCFT kopia', raw:res.rcft_kop, skalp:null, t:res.rcft_kop_t, color:res.rcft_kop_color, label:res.rcft_kop_label},
     {lbl:'RCFT omedelbar ÅG', raw:res.rcft_3min, skalp:null, t:res.rcft_3min_t, color:res.rcft_3min_color, label:res.rcft_3min_label},
     {lbl:'RCFT fördröjd ÅG', raw:res.rcft_30min, skalp:null, t:res.rcft_30min_t, color:res.rcft_30min_color, label:res.rcft_30min_label},
