@@ -1002,6 +1002,7 @@ function byggResultatRader(res) {
     {lbl:'RAVLT Trial 1–5 total', raw:res.ravlt_total, skalp:null, t:res.ravlt_total_t, color:res.ravlt_total_color, label:res.ravlt_total_label},
     {lbl:'RAVLT fördröjd ÅG', raw:res.ravlt_dr, skalp:null, t:res.ravlt_dr_t, color:res.ravlt_dr_color, label:res.ravlt_dr_label},
     ...(res.ravlt_retention_pct !== undefined ? [{lbl:'RAVLT Retention % (DR/T5)', raw:res.ravlt_retention_pct + ' %', skalp:null, t:null, color:res.ravlt_retention_ok?'green':'orange', label:res.ravlt_retention_ok?'✅ Normalt ≥80%':'⚠️ Nedsatt <80%'}] : []),
+    ...(res.ravlt_stpr_pct !== undefined ? [{lbl:'RAVLT Retention – percentil (STPR-norm)', raw:res.ravlt_retention_pct + ' %', skalp:null, t:null, color:res.ravlt_stpr_color, label:res.ravlt_stpr_label}] : []),
     ...(res.ravlt_lot !== undefined ? [{lbl:'RAVLT Inlärningsindex (LOT)', raw:res.ravlt_lot, skalp:null, t:null, color:res.ravlt_lot_color, label:res.ravlt_lot_label}] : []),
     {lbl:'BVMT-R total', raw:res.bvmt_total, skalp:null, t:res.bvmt_total_t, color:res.bvmt_total_color, label:res.bvmt_total_label},
     {lbl:'BVMT-R fördröjd ÅG', raw:res.bvmt_dr, skalp:null, t:res.bvmt_dr_t, color:res.bvmt_dr_color, label:res.bvmt_dr_label},

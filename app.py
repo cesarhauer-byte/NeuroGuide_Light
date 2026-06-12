@@ -112,6 +112,26 @@ LOT_NORMS = {
     90: [23, 19, 18, 15, 12, 11, 11,  9,  5, 0],
 }
 
+# ─── RAVLT PERCENT RETENTION (STPR – Short-Term Percent Retention) ────────────
+# Ivnik et al. – percentilnormer för AVLT Short-Term Percent Retention.
+# OBS: appens retention beräknas som (Fördröjd ÅG / Trial 5) × 100. Tabellens
+# STPR-definition bygger på Trial 6; här används befintligt retentionsvärde
+# (metodologisk avvikelse, vald medvetet av användaren).
+# STPR_NORMS: mittpunktsålder → minsta retention-% (inkl.) för varje band,
+# högsta→lägsta (samma bandordning som LOT_BANDS). Tomt band = otillgängligt.
+STPR_NORMS = {
+    61: [100, 100, 93, 90, 86, 83, 78, 70, 60, 0],
+    64: [ 94,  94, 92, 88, 83, 79, 72, 67, 56, 0],
+    67: [ 94,  94, 93, 87, 83, 78, 73, 67, 57, 0],
+    70: [ 94,  93, 90, 85, 80, 75, 71, 65, 58, 0],
+    73: [ 94,  93, 88, 83, 78, 74, 71, 64, 58, 0],
+    76: [ 94,  92, 88, 83, 79, 74, 70, 63, 58, 0],
+    79: [ 94,  90, 84, 82, 74, 71, 69, 61, 50, 0],
+    82: [ 94,  93, 87, 82, 75, 69, 63, 56, 43, 0],
+    85: [ 92,  91, 86, 80, 71, 66, 61, 51, 42, 0],
+    90: [ 91,  89, 83, 80, 71, 65, 57, 47, 40, 0],
+}
+
 # FIX [VA-3]: Max-ålder i normer är 72. Patienter 73+ normeras mot 72-åringars data.
 BVMT_NORMS = {
     'total': {
@@ -367,6 +387,18 @@ def lot_color_label(band):
     else:           color = 'red'
     return (color, f'Pc {band}')
 
+def stpr_percentil(pct, age):
+    """RAVLT retention-% → percentilband enligt Ivnik STPR-tabell.
+    Returnerar (bandtext, mittpunktsålder) eller None om pct saknas."""
+    if pct is None:
+        return None
+    mid = min(STPR_NORMS.keys(), key=lambda m: abs(m - age))
+    troskel = STPR_NORMS[mid]
+    for i, low in enumerate(troskel):
+        if pct >= low:
+            return (LOT_BANDS[i], mid)
+    return (LOT_BANDS[-1], mid)
+
 def bvmt_t(raw, domain, age):
     norms = BVMT_NORMS.get(domain, {})
     key = get_age_key(norms, age)
@@ -481,6 +513,15 @@ def berakna():
             ret = round((res["ravlt_dr"] / t5) * 100, 1)
             res["ravlt_retention_pct"] = ret
             res["ravlt_retention_ok"] = ret >= 80
+            # STPR-percentilband (Ivnik), applicerat på retentionsvärdet
+            band_mid = stpr_percentil(ret, age)
+            if band_mid is not None:
+                band, mid = band_mid
+                c, l = lot_color_label(band)
+                res["ravlt_stpr_pct"] = band
+                res["ravlt_stpr_age"] = mid
+                res["ravlt_stpr_color"] = c
+                res["ravlt_stpr_label"] = l
     # RAVLT Inlärningsindex (LOT) = (T1+T2+T3+T4+T5) − 5×T1, Ivnik Table 6
     if all(d.get(f"ravlt_{i}") not in (None,"") for i in range(1,6)):
         tvals = [int(d.get(f"ravlt_{i}")) for i in range(1,6)]
