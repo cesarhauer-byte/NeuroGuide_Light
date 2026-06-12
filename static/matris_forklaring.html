@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Så fungerar matrisen – NeuroGuide Light</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f3f4f8; --panel:#ffffff; --border:#dde1ea; --border-light:#e9ecf3;
+  --blue:#3d77e8; --blue-dk:#2c63cf; --blue-lt:#eaf0fe;
+  --red:#e03e3e; --orange:#e87a2e; --yellow:#d9a514; --green:#0aa87e;
+  --text:#1d2333; --text-2:#3a4156; --sub:#5d6578;
+  --radius:16px; --radius-sm:10px;
+  --shadow:0 2px 16px rgba(30,40,70,.09); --shadow-lg:0 10px 40px rgba(30,40,70,.16);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'Inter',-apple-system,sans-serif;background:
+  radial-gradient(1200px 600px at 50% -10%, #ffffff 0%, var(--bg) 60%);
+  color:var(--text);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;
+  display:flex;flex-direction:column;min-height:100vh}
+
+/* Header */
+.head{display:flex;align-items:center;gap:14px;padding:18px 28px;border-bottom:1px solid var(--border);background:rgba(255,255,255,.7);backdrop-filter:blur(6px);position:sticky;top:0;z-index:10}
+.logo{font-size:19px;font-weight:800;color:var(--blue);letter-spacing:-.3px}
+.head-sub{font-size:14px;color:var(--sub);flex:1}
+.badge{font-size:13px;background:var(--blue-lt);color:var(--blue-dk);padding:4px 13px;border-radius:20px;font-weight:600}
+
+/* Progress */
+.progress{display:flex;gap:6px;padding:14px 28px 0}
+.pdot{flex:1;height:6px;border-radius:6px;background:var(--border);overflow:hidden;position:relative}
+.pdot>i{position:absolute;inset:0;width:0;background:linear-gradient(90deg,var(--blue),#6c9bf2);border-radius:6px;transition:width .4s ease}
+.pdot.done>i{width:100%}
+.pdot.active>i{width:100%;animation:none}
+
+/* Stage */
+.stage{flex:1;display:flex;align-items:center;justify-content:center;padding:22px 28px}
+.scene{width:100%;max-width:1080px;display:none;animation:fade .5s ease}
+.scene.show{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+.step-tag{display:inline-flex;align-items:center;gap:9px;font-size:13px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--blue);background:var(--blue-lt);padding:6px 14px;border-radius:20px;margin-bottom:14px}
+.step-tag b{background:var(--blue);color:#fff;width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:13px}
+h1{font-size:32px;font-weight:800;letter-spacing:-.5px;margin-bottom:10px;line-height:1.15}
+h2{font-size:26px;font-weight:700;letter-spacing:-.4px;margin-bottom:8px}
+.lead{font-size:18px;color:var(--text-2);max-width:760px;margin-bottom:22px}
+.muted{color:var(--sub)}
+
+.card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+
+/* Test cards */
+.tcard{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-sm);padding:18px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.tcard .t-name{font-size:15px;font-weight:700;color:var(--text)}
+.tcard .t-struct{font-size:12.5px;color:var(--sub);margin-top:2px;min-height:32px}
+.tcard .t-row{display:flex;align-items:center;justify-content:space-between;margin-top:14px;gap:10px}
+.t-val{font-size:15px;font-weight:600;color:var(--text-2)}
+.t-arrow{color:var(--sub);font-size:18px}
+.t-dev{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;opacity:0;transform:scale(.6);transition:all .5s cubic-bezier(.2,1.2,.4,1)}
+.tcard.reveal .t-dev{opacity:1;transform:none}
+.t-dev.bad{color:var(--red)} .t-dev.warn{color:var(--orange)} .t-dev.ok{color:var(--green)}
+.devbar{height:8px;border-radius:8px;background:var(--border-light);margin-top:12px;overflow:hidden}
+.devbar>i{display:block;height:100%;width:0;border-radius:8px;transition:width .8s ease .2s}
+
+/* deviation table */
+.lut{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+.lut th{text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--sub);padding:7px 12px;border-bottom:1px solid var(--border)}
+.lut td{padding:7px 12px;border-bottom:1px solid var(--border-light)}
+.lut tr.hl td{background:#fff7e9;font-weight:700}
+.chip{display:inline-block;padding:2px 10px;border-radius:20px;font-size:12.5px;font-weight:700}
+.chip.red{background:#fdecec;color:#c22525}.chip.org{background:#fdf0e4;color:#b35a14}
+.chip.yel{background:#fdf7e2;color:#93700a}.chip.grn{background:#e6f8f2;color:#078664}
+
+/* multiply visual */
+.multiply{display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap;margin:8px 0 4px}
+.mfac{text-align:center;min-width:120px}
+.mfac .mf-lbl{font-size:13px;color:var(--sub);font-weight:600}
+.mfac .mf-num{font-size:34px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}
+.mfac .mf-sub{font-size:12px;color:var(--sub)}
+.mop{font-size:30px;font-weight:700;color:var(--sub)}
+.mres{text-align:center;min-width:150px;background:var(--blue-lt);border:2px solid #bdd2f8;border-radius:14px;padding:12px 18px;opacity:0;transform:scale(.7);transition:all .6s cubic-bezier(.2,1.3,.4,1)}
+.mres.show{opacity:1;transform:none}
+.mres .mf-num{color:var(--blue-dk)}
+
+/* structure bars */
+.sbar-row{display:grid;grid-template-columns:200px 1fr 64px;align-items:center;gap:14px;margin-bottom:14px}
+.sbar-lbl{font-size:14.5px;font-weight:600;text-align:right;color:var(--text-2)}
+.sbar-track{height:30px;background:var(--border-light);border-radius:8px;overflow:hidden;position:relative}
+.sbar-fill{height:100%;width:0;border-radius:8px;transition:width 1s cubic-bezier(.3,.9,.3,1);display:flex;align-items:center;justify-content:flex-end;padding-right:0}
+.sbar-pct{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--text)}
+.layer-tag{font-size:11px;font-weight:700;color:#fff;background:rgba(0,0,0,.16);padding:1px 7px;border-radius:10px;margin-right:8px}
+
+/* convergence diagram */
+.conv{position:relative;height:300px}
+.node{position:absolute;background:var(--panel);border:2px solid var(--border);border-radius:12px;padding:10px 14px;font-size:13.5px;font-weight:600;box-shadow:var(--shadow);text-align:center;transition:all .5s}
+.node.path{border-color:var(--red)}
+.node.target{border-color:var(--blue);background:var(--blue-lt);font-size:15px;font-weight:800}
+.node .nd-sub{font-size:11.5px;color:var(--sub);font-weight:500}
+
+/* key insight box */
+.insight{background:linear-gradient(135deg,#eaf0fe,#f4f8ff);border:1px solid #cdddfb;border-left:5px solid var(--blue);border-radius:var(--radius-sm);padding:18px 22px;margin-top:18px;font-size:16.5px}
+.insight b{color:var(--blue-dk)}
+.formula{font-family:'Inter';font-size:19px;font-weight:700;background:#1d2333;color:#eef2ff;padding:14px 20px;border-radius:12px;display:inline-block;margin:6px 0;letter-spacing:.3px}
+.formula .v1{color:#ff8c8c}.formula .v2{color:#ffd27a}.formula .w{color:#8cc4ff}.formula .r{color:#7ff0c8}
+
+ul.clean{list-style:none;margin-top:10px}
+ul.clean li{padding:7px 0 7px 30px;position:relative;font-size:16px}
+ul.clean li::before{content:'';position:absolute;left:4px;top:14px;width:9px;height:9px;border-radius:50%;background:var(--blue)}
+
+/* footer controls */
+.controls{display:flex;align-items:center;gap:12px;padding:16px 28px;border-top:1px solid var(--border);background:rgba(255,255,255,.8);backdrop-filter:blur(6px);position:sticky;bottom:0}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:11px 22px;border-radius:10px;border:none;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;transition:.18s}
+.btn-primary{background:var(--blue);color:#fff}.btn-primary:hover{background:var(--blue-dk)}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text-2)}.btn-ghost:hover{background:var(--bg)}
+.btn:disabled{opacity:.4;cursor:default}
+.spacer{flex:1}
+.scene-count{font-size:14px;color:var(--sub);font-weight:600;font-variant-numeric:tabular-nums}
+.playbtn{min-width:120px;justify-content:center}
+
+@media(max-width:760px){
+  .grid2,.grid3{grid-template-columns:1fr}
+  h1{font-size:26px}.lead{font-size:16px}
+  .sbar-row{grid-template-columns:120px 1fr 50px;gap:8px}
+  .conv{height:auto}
+}
+</style>
+</head>
+<body>
+
+<div class="head">
+  <span class="logo">NeuroGuide&nbsp;Light</span>
+  <span class="head-sub">Så fungerar matrisanalysen – steg för steg</span>
+  <span class="badge">Pedagogisk genomgång</span>
+</div>
+
+<div class="progress" id="progress"></div>
+
+<div class="stage">
+
+  <!-- ════ SCEN 0 – INTRO ════ -->
+  <section class="scene show" data-auto="9000">
+    <div class="step-tag"><b>0</b> Översikt</div>
+    <h1>Varför säger flera test tillsammans mer<br>än vart och ett för sig?</h1>
+    <p class="lead">Matrisen letar efter <b>konvergent bevis</b>: när flera <i>oberoende</i> test pekar mot samma hjärnstruktur blir signalen starkare än summan av delarna. Här följer vi ett patientfall hela vägen genom de sex stegen.</p>
+    <div class="card">
+      <div class="grid3" style="gap:14px">
+        <div><div class="step-tag" style="margin:0 0 6px"><b>1</b></div><b>Avvikelse</b><div class="muted" style="font-size:14px">Varje testvärde → siffra 0–1</div></div>
+        <div><div class="step-tag" style="margin:0 0 6px"><b>2</b></div><b>Konvergens</b><div class="muted" style="font-size:14px">Vilka mått pekar åt samma håll?</div></div>
+        <div><div class="step-tag" style="margin:0 0 6px"><b>3</b></div><b>Förstärkning</b><div class="muted" style="font-size:14px">Avvikelserna multipliceras</div></div>
+        <div><div class="step-tag" style="margin:0 0 6px"><b>4</b></div><b>Strukturkarta</b><div class="muted" style="font-size:14px">Aktivering per hjärnstruktur</div></div>
+        <div><div class="step-tag" style="margin:0 0 6px"><b>5</b></div><b>Normalisering</b><div class="muted" style="font-size:14px">Skala om till 0–100 %</div></div>
+        <div><div class="step-tag" style="margin:0 0 6px"><b>6</b></div><b>Diagnosindikation</b><div class="muted" style="font-size:14px">Mönstret matchas mot sjukdomar</div></div>
+      </div>
+    </div>
+    <div class="insight">Vårt exempel: en patient med <b>RAVLT fördröjd T=28</b>, <b>MTA vänster = 3</b> och <b>TMT-B T=34</b>. Tre olika mätmetoder – vi ska se hur de samverkar.</div>
+  </section>
+
+  <!-- ════ SCEN 1 – AVVIKELSE ════ -->
+  <section class="scene" data-auto="10000">
+    <div class="step-tag"><b>1</b> Avvikelse per variabel</div>
+    <h2>Först översätts varje testvärde till en avvikelsegrad</h2>
+    <p class="lead">Ett <b>normalt</b> resultat ger alltid <b>0.0</b> – det bidrar inte. Bara patologiska värden får en siffra mellan 0 och 1. Ju sämre, desto högre.</p>
+    <div class="grid3" id="devCards">
+      <div class="tcard" data-dev=".75" data-cls="bad" data-col="var(--red)">
+        <div class="t-name">RAVLT Fördröjd ÅG</div>
+        <div class="t-struct">hippocampus CA1, vänster dominant</div>
+        <div class="t-row"><span class="t-val">T = 28</span><span class="t-arrow">→</span><span class="t-dev bad">0.75</span></div>
+        <div class="devbar"><i style="background:var(--red)"></i></div>
+      </div>
+      <div class="tcard" data-dev=".85" data-cls="bad" data-col="var(--red)">
+        <div class="t-name">MTA Vänster (MR)</div>
+        <div class="t-struct">hippocampus vänster, entorhinalcortex</div>
+        <div class="t-row"><span class="t-val">grad = 3</span><span class="t-arrow">→</span><span class="t-dev bad">0.85</span></div>
+        <div class="devbar"><i style="background:var(--red)"></i></div>
+      </div>
+      <div class="tcard" data-dev=".40" data-cls="warn" data-col="var(--orange)">
+        <div class="t-name">TMT-B</div>
+        <div class="t-struct">DLPFC, anteriora cingulate</div>
+        <div class="t-row"><span class="t-val">T = 34</span><span class="t-arrow">→</span><span class="t-dev warn">0.40</span></div>
+        <div class="devbar"><i style="background:var(--orange)"></i></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:18px;padding:16px 20px">
+      <table class="lut">
+        <thead><tr><th>T-poäng (lägre = sämre)</th><th>Avvikelse</th><th>Tolkning</th></tr></thead>
+        <tbody>
+          <tr><td>≥ 40</td><td><span class="chip grn">0.00</span></td><td>Normalt – bidrar inte</td></tr>
+          <tr><td>35–39</td><td><span class="chip yel">0.10–0.25</span></td><td>Lätt nedsatt</td></tr>
+          <tr class="hl"><td>27–34</td><td><span class="chip org">0.40–0.75</span></td><td>Tydligt nedsatt &nbsp;←&nbsp; RAVLT T=28, TMT-B T=34</td></tr>
+          <tr><td>≤ 26</td><td><span class="chip red">0.85–1.00</span></td><td>Uttalat patologiskt</td></tr>
+        </tbody>
+      </table>
+      <div class="muted" style="font-size:13.5px;margin-top:10px">MR-grader (MTA, GCA, Koedam, Fazekas) använder en egen skala: grad 3 → 0.85.</div>
+    </div>
+  </section>
+
+  <!-- ════ SCEN 2 – KONVERGENS ════ -->
+  <section class="scene" data-auto="9000">
+    <div class="step-tag"><b>2</b> Konvergens</div>
+    <h2>Vilka avvikelser pekar mot samma hjärnstruktur?</h2>
+    <p class="lead">RAVLT och MTA vänster är <b>helt olika metoder</b> – ett minnestest och en strukturell MR-mätning – men båda speglar <b>vänster hippocampus</b>. Det är just sådana möten matrisen letar efter.</p>
+    <div class="card">
+      <div class="conv" id="convDiagram">
+        <div class="node path" style="left:0;top:40px">RAVLT Fördröjd<div class="nd-sub">avvikelse 0.75</div></div>
+        <div class="node path" style="left:0;top:170px">MTA Vänster<div class="nd-sub">avvikelse 0.85</div></div>
+        <div class="node target" style="right:0;top:95px">Vänster hippocampus<div class="nd-sub" style="color:var(--blue-dk)">konvergenspunkt</div></div>
+        <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none" id="convLines">
+          <defs>
+            <marker id="ah" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+              <path d="M0,0 L8,3 L0,6 Z" fill="#3d77e8"/>
+            </marker>
+          </defs>
+          <path class="cline" d="M 215 60 C 400 60, 480 110, 640 120" fill="none" stroke="#3d77e8" stroke-width="3" marker-end="url(#ah)"/>
+          <path class="cline" d="M 215 190 C 400 190, 480 140, 640 140" fill="none" stroke="#3d77e8" stroke-width="3" marker-end="url(#ah)"/>
+        </svg>
+      </div>
+    </div>
+    <div class="insight"><b>Spärr mot dubbelräkning:</b> två test ur samma familj (t.ex. RAVLT total + RAVLT fördröjd) får aldrig förstärka varandra – de mäter inte oberoende saker.</div>
+  </section>
+
+  <!-- ════ SCEN 3 – FÖRSTÄRKNING ════ -->
+  <section class="scene" data-auto="11000">
+    <div class="step-tag"><b>3</b> Förstärkning</div>
+    <h2>Avvikelserna multipliceras – inte adderas</h2>
+    <p class="lead">Det är kärnan i hela modellen. Två svaga–måttliga signaler som möts blir en stark gemensam signal. Korrelationsvikten (här <b>9.0</b>, evidensbaserad) avgör hur hårt de kopplas.</p>
+    <div class="card">
+      <div class="multiply">
+        <div class="mfac"><div class="mf-lbl">RAVLT Fördröjd</div><div class="mf-num" style="color:var(--red)">0.75</div><div class="mf-sub">avvikelse</div></div>
+        <div class="mop">×</div>
+        <div class="mfac"><div class="mf-lbl">MTA Vänster</div><div class="mf-num" style="color:var(--red)">0.85</div><div class="mf-sub">avvikelse</div></div>
+        <div class="mop">×</div>
+        <div class="mfac"><div class="mf-lbl">Korrelationsvikt</div><div class="mf-num" style="color:var(--blue)">9.0</div><div class="mf-sub">RAVLT↔MTA-v</div></div>
+        <div class="mop">=</div>
+        <div class="mres" id="mres3"><div class="mf-lbl">Förstärkning</div><div class="mf-num">5.74</div><div class="mf-sub">av 10</div></div>
+      </div>
+      <div style="text-align:center;margin-top:14px">
+        <span class="formula"><span class="v1">avv₁</span> × <span class="v2">avv₂</span> × <span class="w">vikt</span> = <span class="r">förstärkning</span></span>
+      </div>
+    </div>
+    <div class="insight">Hade <b>ett</b> av måtten varit normalt (0.0) blir produkten <b>0</b> – ingen förstärkning. Det krävs att <b>båda</b> är patologiska. Det är så modellen kräver konvergent bevis innan den höjer rösten.</div>
+  </section>
+
+  <!-- ════ SCEN 4 – STRUKTURKARTA ════ -->
+  <section class="scene" data-auto="10000">
+    <div class="step-tag"><b>4</b> Strukturaktivering</div>
+    <h2>Varje struktur samlar sina bidrag</h2>
+    <p class="lead">Direkt bidrag (avvikelse × lokalisationsvikt) <i>plus</i> alla förstärkningar läggs ihop per hjärnstruktur. Vänster hippocampus får bidrag från tre håll och drar iväg.</p>
+    <div class="card">
+      <div class="sbar-row">
+        <div class="sbar-lbl">Vänster hippocampus</div>
+        <div class="sbar-track"><div class="sbar-fill" data-pct="100" style="background:linear-gradient(90deg,#e03e3e,#ff7a5c)"><span class="layer-tag">direkt + förstärkt</span></div></div>
+        <div class="sbar-pct">100%</div>
+      </div>
+      <div class="sbar-row">
+        <div class="sbar-lbl">Höger hippocampus</div>
+        <div class="sbar-track"><div class="sbar-fill" data-pct="34" style="background:linear-gradient(90deg,#e87a2e,#f5b06b)"></div></div>
+        <div class="sbar-pct">34%</div>
+      </div>
+      <div class="sbar-row">
+        <div class="sbar-lbl">DLPFC (frontalt)</div>
+        <div class="sbar-track"><div class="sbar-fill" data-pct="41" style="background:linear-gradient(90deg,#e87a2e,#f5b06b)"></div></div>
+        <div class="sbar-pct">41%</div>
+      </div>
+      <div class="sbar-row">
+        <div class="sbar-lbl">Parietallob</div>
+        <div class="sbar-track"><div class="sbar-fill" data-pct="12" style="background:linear-gradient(90deg,#d9a514,#f0cf6a)"></div></div>
+        <div class="sbar-pct">12%</div>
+      </div>
+    </div>
+    <div class="insight">Lägg märke till: ingen <i>enskild</i> avvikelse var 1.0, men genom konvergensen <b>dominerar vänster hippocampus tydligt</b>. Mönstret – inte ett enstaka värde – är det kliniskt intressanta.</div>
+  </section>
+
+  <!-- ════ SCEN 5 – NORMALISERING + DIAGNOS ════ -->
+  <section class="scene" data-auto="10000">
+    <div class="step-tag"><b>5–6</b> Normalisering &amp; diagnosindikation</div>
+    <h2>Mönstret skalas till 0–100 % och matchas mot sjukdomar</h2>
+    <p class="lead">Den starkaste strukturen sätts till 100 %, övriga relativt den. Samma avvikelser viktas sedan mot kända sjukdomsmönster – varje sjukdom har en förväntad profil.</p>
+    <div class="grid2">
+      <div class="card">
+        <h2 style="font-size:18px;margin-bottom:14px">Diagnos­indikation</h2>
+        <div class="sbar-row" style="grid-template-columns:130px 1fr 56px">
+          <div class="sbar-lbl">Alzheimer (AD)</div>
+          <div class="sbar-track"><div class="sbar-fill" data-pct="78" style="background:linear-gradient(90deg,#3d77e8,#6c9bf2)"></div></div>
+          <div class="sbar-pct">78%</div>
+        </div>
+        <div class="sbar-row" style="grid-template-columns:130px 1fr 56px">
+          <div class="sbar-lbl">Blandad (AD+VaD)</div>
+          <div class="sbar-track"><div class="sbar-fill" data-pct="41" style="background:linear-gradient(90deg,#3d77e8,#6c9bf2)"></div></div>
+          <div class="sbar-pct">41%</div>
+        </div>
+        <div class="sbar-row" style="grid-template-columns:130px 1fr 56px">
+          <div class="sbar-lbl">Vaskulär (VaD)</div>
+          <div class="sbar-track"><div class="sbar-fill" data-pct="29" style="background:linear-gradient(90deg,#3d77e8,#6c9bf2)"></div></div>
+          <div class="sbar-pct">29%</div>
+        </div>
+        <div class="muted" style="font-size:13px;margin-top:8px">Siffror illustrerar mönstret; din patients exakta värden räknas i appen.</div>
+      </div>
+      <div class="card">
+        <h2 style="font-size:18px;margin-bottom:14px">Vad kliniken ser</h2>
+        <ul class="clean">
+          <li>Dominant <b>vänster mediotemporal</b> profil</li>
+          <li>Konvergens mellan <b>funktion</b> (RAVLT) och <b>struktur</b> (MTA)</li>
+          <li>Lättare frontalt inslag (TMT-B) – sekundärt</li>
+          <li>Mönstret är <b>typiskt för tidig AD</b></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ SCEN 6 – SAMMANFATTNING ════ -->
+  <section class="scene" data-auto="0">
+    <div class="step-tag"><b>✓</b> Sammanfattning</div>
+    <h1>Hela kedjan i en mening</h1>
+    <p class="lead">Matrisen omvandlar testvärden till avvikelser, multiplicerar ihop de avvikelser som pekar mot samma struktur, summerar per hjärnstruktur, normaliserar och matchar mot sjukdomsmönster.</p>
+    <div class="card">
+      <div style="text-align:center">
+        <span class="formula" style="font-size:17px">testvärde → <span class="v1">avvikelse</span> → <span class="v2">förstärkning</span> (×) → <span class="w">strukturkarta</span> → 0–100 % → <span class="r">diagnos</span></span>
+      </div>
+      <div class="insight" style="margin-top:22px;font-size:17px">
+        <b>Det viktiga budskapet till kollegor:</b> ett enstaka lågt testvärde kan vara brus. Men när två <i>oberoende</i> metoder samtidigt pekar på samma struktur multipliceras säkerheten – konvergent bevis är starkare än summan av delarna.
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:22px">
+      <button class="btn btn-primary" onclick="goTo(0)">↻ Spela om från början</button>
+    </div>
+  </section>
+
+</div>
+
+<div class="controls">
+  <button class="btn btn-ghost" id="prevBtn">←&nbsp; Föregående</button>
+  <button class="btn btn-primary playbtn" id="playBtn">▶ Spela upp</button>
+  <button class="btn btn-ghost" id="nextBtn">Nästa&nbsp; →</button>
+  <div class="spacer"></div>
+  <div class="scene-count"><span id="curNum">1</span> / <span id="totNum">7</span></div>
+</div>
+
+<script>
+const scenes = Array.from(document.querySelectorAll('.scene'));
+const progress = document.getElementById('progress');
+let cur = 0, playing = false, timer = null;
+
+// build progress dots
+scenes.forEach((_,i)=>{
+  const d=document.createElement('div'); d.className='pdot'; d.innerHTML='<i></i>';
+  d.onclick=()=>goTo(i); progress.appendChild(d);
+});
+const dots=Array.from(progress.children);
+document.getElementById('totNum').textContent=scenes.length;
+
+function runSceneAnim(i){
+  const s=scenes[i];
+  // deviation cards
+  s.querySelectorAll('.tcard').forEach((c,k)=>{
+    setTimeout(()=>{
+      c.classList.add('reveal');
+      const bar=c.querySelector('.devbar>i');
+      if(bar) bar.style.width=(parseFloat(c.dataset.dev)*100)+'%';
+    }, 350 + k*550);
+  });
+  // multiply result
+  const mres=s.querySelector('.mres');
+  if(mres){ mres.classList.remove('show'); setTimeout(()=>mres.classList.add('show'),1400); }
+  // structure / diagnosis bars
+  s.querySelectorAll('.sbar-fill').forEach((b,k)=>{
+    b.style.width='0';
+    setTimeout(()=>{ b.style.width=b.dataset.pct+'%'; }, 300 + k*220);
+  });
+  // convergence lines draw
+  s.querySelectorAll('.cline').forEach((p,k)=>{
+    const len=p.getTotalLength();
+    p.style.strokeDasharray=len; p.style.strokeDashoffset=len;
+    p.style.transition='none';
+    requestAnimationFrame(()=>{
+      p.style.transition='stroke-dashoffset 1s ease '+(0.3+k*0.4)+'s';
+      p.style.strokeDashoffset=0;
+    });
+  });
+}
+
+function show(i){
+  scenes[cur].classList.remove('show');
+  cur=i;
+  scenes[cur].classList.add('show');
+  dots.forEach((d,k)=>{ d.classList.toggle('done',k<i); d.classList.toggle('active',k===i); });
+  document.getElementById('curNum').textContent=i+1;
+  document.getElementById('prevBtn').disabled=(i===0);
+  document.getElementById('nextBtn').disabled=(i===scenes.length-1);
+  window.scrollTo({top:0,behavior:'smooth'});
+  runSceneAnim(i);
+}
+function goTo(i){ stopPlay(); show(i); }
+function next(){ if(cur<scenes.length-1) show(cur+1); }
+function prev(){ if(cur>0) show(cur-1); }
+
+function scheduleAuto(){
+  clearTimeout(timer);
+  const d=parseInt(scenes[cur].dataset.auto||'0',10);
+  if(playing && d>0){
+    timer=setTimeout(()=>{ if(cur<scenes.length-1){ show(cur+1); scheduleAuto(); } else stopPlay(); }, d);
+  } else if(playing && cur===scenes.length-1){ stopPlay(); }
+}
+function startPlay(){ playing=true; document.getElementById('playBtn').innerHTML='❚❚ Pausa'; scheduleAuto(); }
+function stopPlay(){ playing=false; clearTimeout(timer); document.getElementById('playBtn').innerHTML='▶ Spela upp'; }
+
+document.getElementById('nextBtn').onclick=()=>{ stopPlay(); next(); };
+document.getElementById('prevBtn').onclick=()=>{ stopPlay(); prev(); };
+document.getElementById('playBtn').onclick=()=>{ if(playing) stopPlay(); else { if(cur===scenes.length-1) show(0); startPlay(); } };
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'){stopPlay();next();}
+  if(e.key==='ArrowLeft'){stopPlay();prev();}
+  if(e.key===' '){e.preventDefault();document.getElementById('playBtn').click();}
+});
+
+show(0);
+</script>
+</body>
+</html>
