@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NeuroGuide Exploring · övningsläge</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#eef1f7; --bg2:#f7f9fc; --panel:#ffffff; --ink:#161b29; --ink2:#3c4459; --sub:#727b91;
+  --line:#e2e7f0; --line2:#eef1f7;
+  --ind:#5b6cff; --ind-dk:#4453e6; --teal:#14b8a6;
+  --red:#e5484d; --orange:#e8820e; --amber:#d9a40b; --green:#15a86b; --blue:#3b82f6;
+  --r:18px; --r2:12px;
+  --sh:0 1px 2px rgba(20,30,60,.04),0 8px 30px rgba(20,30,60,.07);
+  --sh2:0 1px 2px rgba(20,30,60,.04),0 2px 10px rgba(20,30,60,.05);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'Inter',system-ui,sans-serif;font-size:15px;line-height:1.55;color:var(--ink);
+  background:
+    radial-gradient(1100px 520px at 12% -8%, #fbfdff 0%, transparent 60%),
+    radial-gradient(900px 500px at 100% 0%, #eef0ff 0%, transparent 55%),
+    var(--bg);
+  -webkit-font-smoothing:antialiased;min-height:100vh}
+
+/* Header */
+.top{display:flex;align-items:center;gap:14px;padding:18px 30px;position:sticky;top:0;z-index:30;
+  background:rgba(247,249,252,.72);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.mark{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--ind),var(--teal));
+  display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:17px;
+  box-shadow:0 6px 18px rgba(91,108,255,.35);flex-shrink:0}
+.brand{font-size:19px;font-weight:800;letter-spacing:-.4px}
+.brand small{font-weight:500;color:var(--sub);font-size:13px;letter-spacing:0}
+.top-spacer{flex:1}
+.conn{font-size:12.5px;font-weight:600;padding:5px 12px;border-radius:20px;display:flex;align-items:center;gap:7px}
+.conn::before{content:'';width:8px;height:8px;border-radius:50%;background:currentColor;box-shadow:0 0 0 3px currentColor;opacity:1}
+.conn.ok{color:var(--green);background:#e7f7ef}
+.conn.bad{color:var(--red);background:#fdecec}
+.conn::before{box-shadow:0 0 0 3px color-mix(in srgb, currentColor 22%, transparent)}
+
+.wrap{max-width:1280px;margin:0 auto;padding:24px 30px 80px;display:grid;grid-template-columns:1.15fr .85fr;gap:26px;align-items:start}
+@media(max-width:980px){.wrap{grid-template-columns:1fr}}
+
+.h1{font-size:13px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--sub);margin:2px 0 14px}
+
+/* Patient strip */
+.pstrip{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh2);
+  padding:16px 18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:14px;margin-bottom:22px}
+.fld{display:flex;flex-direction:column;gap:5px}
+.fld label{font-size:12px;font-weight:600;color:var(--sub)}
+.fld input,.fld select{height:42px;border:1.5px solid var(--line);border-radius:11px;background:var(--bg2);
+  padding:0 12px;font:inherit;font-size:15px;color:var(--ink);outline:none;transition:.15s;width:100%}
+.fld input:focus,.fld select:focus{border-color:var(--ind);background:#fff;box-shadow:0 0 0 4px rgba(91,108,255,.13)}
+
+/* Test cards */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh2);margin-bottom:18px;overflow:hidden;transition:box-shadow .2s}
+.card:focus-within{box-shadow:var(--sh)}
+.card-h{display:flex;align-items:center;gap:11px;padding:15px 20px;cursor:pointer;user-select:none}
+.card-h .ic{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.card-h .ttl{font-weight:700;font-size:15.5px;flex:1}
+.card-h .chev{color:var(--sub);transition:transform .25s;font-size:13px}
+.card.collapsed .chev{transform:rotate(-90deg)}
+.card-b{padding:4px 20px 20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(115px,1fr));gap:13px}
+.card.collapsed .card-b{display:none}
+.in{display:flex;flex-direction:column;gap:5px}
+.in label{font-size:11.5px;font-weight:600;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.in input,.in select{height:40px;border:1.5px solid var(--line);border-radius:10px;background:var(--bg2);
+  padding:0 11px;font:inherit;font-size:15px;color:var(--ink);outline:none;transition:.15s;width:100%}
+.in input:focus,.in select:focus{border-color:var(--ind);background:#fff;box-shadow:0 0 0 4px rgba(91,108,255,.13)}
+.in input.flash{animation:flash .6s}
+@keyframes flash{0%{background:#eaf6ff}100%{background:var(--bg2)}}
+
+/* Right rail */
+.rail{position:sticky;top:86px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);margin-bottom:18px;padding:20px}
+.panel-t{font-size:13px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--sub);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+
+/* Radar */
+.radar-wrap{position:relative;width:100%;max-width:430px;margin:0 auto}
+svg.radar{width:100%;height:auto;display:block;overflow:visible}
+.radar .grid{fill:none;stroke:var(--line);stroke-width:1}
+.radar .spoke{stroke:var(--line);stroke-width:1}
+.radar .ref40{fill:none;stroke:#cdd4e3;stroke-width:1.2;stroke-dasharray:3 3}
+.radar .ref35{fill:none;stroke:#f3c0c2;stroke-width:1.2;stroke-dasharray:2 3}
+.radar .poly{fill:rgba(91,108,255,.13);stroke:var(--ind);stroke-width:2.2;
+  stroke-linejoin:round;transition:all .5s cubic-bezier(.3,.9,.3,1)}
+.radar .pt{transition:all .5s cubic-bezier(.3,.9,.3,1)}
+.radar .lbl{font-size:8.7px;font-weight:600;fill:var(--ink2)}
+.radar .tick{font-size:7px;fill:var(--sub)}
+
+/* Domain meters */
+.dom{margin-bottom:13px}
+.dom-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
+.dom-name{font-size:13.5px;font-weight:600;color:var(--ink2)}
+.dom-val{font-size:13px;font-weight:800;font-variant-numeric:tabular-nums}
+.dom-bar{height:9px;border-radius:6px;background:var(--line2);overflow:hidden;position:relative}
+.dom-bar::before{content:'';position:absolute;left:33.33%;top:0;bottom:0;width:1px;background:#d6dcea}
+.dom-bar::after{content:'';position:absolute;left:25%;top:0;bottom:0;width:1px;background:#f0cdce}
+.dom-fill{height:100%;border-radius:6px;width:0;transition:width .7s cubic-bezier(.3,.9,.3,1)}
+
+/* Narrative */
+.narr{font-size:14.5px;line-height:1.7;color:var(--ink2)}
+.narr .pill{display:inline-block;font-weight:700;padding:1px 8px;border-radius:7px;font-size:13px;margin:0 1px}
+
+/* Results table */
+.rtab{width:100%;border-collapse:collapse;font-size:14px}
+.rtab th{text-align:left;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--sub);padding:7px 8px;border-bottom:1px solid var(--line)}
+.rtab td{padding:8px;border-bottom:1px solid var(--line2)}
+.rtab tr:last-child td{border-bottom:none}
+.rtab .tnum{font-weight:800;font-variant-numeric:tabular-nums;font-size:15px}
+.rtab .cat td{background:var(--bg2);font-weight:700;font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:var(--sub);padding:6px 8px}
+.bdg{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11.5px;font-weight:700;white-space:nowrap}
+.b-red{background:#fdecec;color:#c0282d}.b-orange{background:#fdf0e0;color:#b3640a}
+.b-amber{background:#fdf8e3;color:#8a6c07}.b-green{background:#e7f7ef;color:#0e8a57}
+.b-blue{background:#e8f0fe;color:#2b62c6}.b-gray{background:#eef1f7;color:#727b91}
+
+.empty{text-align:center;color:var(--sub);padding:30px 10px;font-size:14px}
+.empty .big{font-size:30px;margin-bottom:8px;opacity:.5}
+
+.foot{max-width:1280px;margin:0 auto;padding:0 30px 40px;color:var(--sub);font-size:12.5px;text-align:center}
+.kbd{font-family:inherit;background:var(--panel);border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:1px 6px;font-size:11.5px;font-weight:600;color:var(--ink2)}
+.btn{height:40px;padding:0 16px;border:1.5px solid var(--line);background:var(--panel);border-radius:11px;font:inherit;font-weight:600;font-size:14px;color:var(--ink2);cursor:pointer;transition:.15s}
+.btn:hover{background:var(--bg2);border-color:#d4dae8}
+.btn-primary{background:var(--ind);border-color:var(--ind);color:#fff}
+.btn-primary:hover{background:var(--ind-dk)}
+.toolbar{display:flex;gap:10px;margin-bottom:22px;flex-wrap:wrap}
+/* Övningsläge */
+.scaffold{font-size:13.5px;color:var(--ink2);background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:13px 15px;margin-bottom:12px}
+.scaffold b{color:var(--ink)}
+.scaffold ul{margin:8px 0 0;padding-left:18px}
+.scaffold li{margin:4px 0}
+.egen{width:100%;min-height:140px;border:1.5px solid var(--line);border-radius:12px;background:var(--bg2);padding:12px 13px;font:inherit;font-size:14.5px;color:var(--ink);outline:none;resize:vertical;line-height:1.65}
+.egen:focus{border-color:var(--ind);background:#fff;box-shadow:0 0 0 4px rgba(91,108,255,.13)}
+.facit{margin-top:16px;padding-top:14px;border-top:1px dashed var(--line);animation:fadein .35s}
+@keyframes fadein{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="mark" style="background:linear-gradient(135deg,#7c5cff,#14b8a6)">E</div>
+  <div class="brand">NeuroGuide&nbsp;Exploring <small>· övningsläge – tolka själv först</small></div>
+  <div class="top-spacer"></div>
+  <div class="conn ok" id="conn">ansluten</div>
+</div>
+
+<div class="wrap">
+  <!-- ───────── INPUT COLUMN ───────── -->
+  <div>
+    <div class="toolbar">
+      <button class="btn" onclick="fyllExempel()">✨ Exempelpatient</button>
+      <button class="btn" onclick="rensaAllt()">↺ Rensa</button>
+      <button class="btn" onclick="window.print()">🖨 Skriv ut</button>
+    </div>
+
+    <div class="pstrip">
+      <div class="fld"><label>Ålder</label><input id="alder" type="number" min="18" max="100" placeholder="70"></div>
+      <div class="fld"><label>Kön</label><select id="kon"><option value="">—</option><option>Man</option><option>Kvinna</option></select></div>
+      <div class="fld"><label>Utbildningsår</label><input id="utb" type="number" min="0" max="30" placeholder="12"></div>
+      <div class="fld"><label>Flödesnivå</label><select id="utb_flode"><option value="A">Låg (&lt;12 år)</option><option value="B" selected>Hög (≥12 år)</option></select></div>
+    </div>
+
+    <div class="h1">Testinmatning · räknas live</div>
+    <div id="cards"></div>
+  </div>
+
+  <!-- ───────── LIVE PROFILE COLUMN ───────── -->
+  <div class="rail">
+    <div class="panel">
+      <div class="panel-t">🕸️ Kognitiv signatur</div>
+      <div class="radar-wrap"><div id="radar"></div></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-t">📊 Domäner</div>
+      <div id="domains"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-t">🧭 Din tolkning</div>
+      <div class="scaffold">
+        <b>Tänk själv först – innan du tittar på facit:</b>
+        <ul>
+          <li>Vilka domäner är nedsatta, och hur uttalat?</li>
+          <li>Finns ett verbalt/visuospatialt (vänster/höger) mönster?</li>
+          <li>Talar tempo &amp; exekutivt för ett subkortikalt inslag?</li>
+          <li>Vad talar <i>för</i> respektive <i>emot</i> olika diagnoser?</li>
+        </ul>
+      </div>
+      <textarea id="egen" class="egen" placeholder="Skriv din egen tolkning av profilen här först…"></textarea>
+      <button class="btn btn-primary" id="visaFacit" style="width:100%;margin-top:11px" onclick="vaxlaFacit()">👁 Visa Lumens observationer</button>
+      <div id="facit" class="facit" style="display:none">
+        <div class="panel-t" style="margin:0 0 10px">📝 Lumens observationer · jämför med din tolkning</div>
+        <div class="narr" id="narr"></div>
+      </div>
+    </div>
+
+    <div class="panel" id="resPanel" style="display:none">
+      <div class="panel-t">📋 Alla beräknade värden</div>
+      <table class="rtab"><tbody id="resBody"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<div class="foot">
+  NeuroGuide Exploring · övningsläge — mata in poäng, läs profilen och formulera din egen tolkning.
+  Fäll först ut <span class="kbd">Lumens observationer</span> när du tänkt klart, och jämför.
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════════════
+// Testdefinitioner – grupperade per kort. id = fältnamn till /berakna.
+// ════════════════════════════════════════════════════════════════════
+const KORT = [
+  {id:'ravlt', ic:'🔤', icbg:'#e8f0fe', ttl:'RAVLT – verbalt episodiskt minne', falt:[
+    {id:'ravlt_1',l:'Försök 1',max:15},{id:'ravlt_2',l:'Försök 2',max:15},{id:'ravlt_3',l:'Försök 3',max:15},
+    {id:'ravlt_4',l:'Försök 4',max:15},{id:'ravlt_5',l:'Försök 5',max:15},{id:'ravlt_dist',l:'Distraktor B',max:15},
+    {id:'ravlt_dr',l:'Fördröjd ÅG',max:15},{id:'ravlt_rek_sp',l:'Igenk. SP',max:15},{id:'ravlt_rek_fp',l:'Igenk. FP',max:50},
+  ]},
+  {id:'bvmt', ic:'👁️', icbg:'#e7f7ef', ttl:'BVMT-R – visuospatialt minne', falt:[
+    {id:'bvmt_1',l:'Försök 1',max:12},{id:'bvmt_2',l:'Försök 2',max:12},{id:'bvmt_3',l:'Försök 3',max:12},
+    {id:'bvmt_dr',l:'Fördröjd ÅG',max:12},{id:'bvmt_rek_sp',l:'Hits',max:12},{id:'bvmt_rek_fp',l:'Falsklarm',max:6},
+  ]},
+  {id:'rcft', ic:'✏️', icbg:'#fdf8e3', ttl:'RCFT – komplex figur', falt:[
+    {id:'rcft_kop',l:'Kopia',max:36,step:'0.5'},{id:'rcft_3min',l:'Omedelbar ÅG',max:36,step:'0.5'},
+    {id:'rcft_30min',l:'Fördröjd ÅG',max:36,step:'0.5'},{id:'rcft_rek_sp',l:'Igenk. SP',max:24},{id:'rcft_rek_fp',l:'Igenk. FP',max:24},
+  ]},
+  {id:'wais', ic:'🧩', icbg:'#eef0ff', ttl:'WAIS – deltester', falt:[
+    {id:'block_raw',l:'Blockmönster',max:66},{id:'lik_raw',l:'Likheter',max:36},
+    {id:'info_raw',l:'Information',max:26},{id:'kod_raw',l:'Kodning',max:135},
+    {id:'siff_fram',l:'Siffra fram',max:16},{id:'siff_bak',l:'Siffra bak',max:14},{id:'siff_ordning',l:'Siffra ordn.',max:14},
+  ]},
+  {id:'tmt', ic:'⏱️', icbg:'#fdf0e0', ttl:'TMT – Trail Making', falt:[
+    {id:'tmt_a',l:'TMT-A (sek)',max:999},{id:'tmt_b',l:'TMT-B (sek)',max:999},
+  ]},
+  {id:'flode', ic:'💬', icbg:'#e8f0fe', ttl:'Verbalt flöde', falt:[
+    {id:'fas_f',l:'FAS – F',max:60},{id:'fas_a',l:'FAS – A',max:60},{id:'fas_s',l:'FAS – S',max:60},{id:'djur',l:'Djurnamn',max:60},
+  ]},
+  {id:'klocka', ic:'🕐', icbg:'#fdf8e3', ttl:'Klocktest', falt:[
+    {id:'klocka_rita',l:'Rita (CDT)',max:10,step:'0.5'},{id:'klocka_avlasa',l:'Avläsa',max:10,step:'0.5'},
+  ]},
+];
+
+// Radaraxlar (resultatnyckel → etikett)
+const AXLAR = [
+  ['ravlt_total_t','RAVLT tot'],['ravlt_dr_t','RAVLT ÅG'],['bvmt_total_t','BVMT tot'],['bvmt_dr_t','BVMT ÅG'],
+  ['rcft_30min_t','RCFT ÅG'],['tmt_a_t','TMT-A'],['tmt_b_t','TMT-B'],['block_t','Block'],
+  ['kod_t','Kodning'],['siff_t','Siffra'],['fas_t','FAS'],['djur_t','Djur'],['lik_t','Likheter'],['info_t','Info'],
+];
+
+// Domäner: medel av tillgängliga T-poäng
+const DOMANER = [
+  ['Verbalt minne',     ['ravlt_total_t','ravlt_dr_t']],
+  ['Visuospatialt minne',['bvmt_total_t','bvmt_dr_t','rcft_30min_t']],
+  ['Visuospatial konstr.',['block_t','rcft_kop_t']],
+  ['Exekutiv funktion',  ['tmt_b_t','fas_t']],
+  ['Tempo & uppmärksamhet',['tmt_a_t','kod_t','siff_t']],
+  ['Språk & semantik',   ['lik_t','info_t','djur_t']],
+];
+
+// Resultattabell-rader
+const RTAB = [
+  ['MINNE', null],
+  ['RAVLT total','ravlt_total'],['RAVLT fördröjd ÅG','ravlt_dr'],
+  ['BVMT-R total','bvmt_total'],['BVMT-R fördröjd ÅG','bvmt_dr'],
+  ['RCFT omedelbar','rcft_3min'],['RCFT fördröjd','rcft_30min'],
+  ['Sifferrepetition','siff'],
+  ['SPRÅK & EXEKUTIVT', null],
+  ['Likheter','lik'],['Information','info'],['FAS total','fas'],['Djurnamn','djur'],
+  ['VISUOSPATIALT & TEMPO', null],
+  ['Blockmönster','block'],['RCFT kopia','rcft_kop'],
+  ['TMT-A','tmt_a'],['TMT-B','tmt_b'],['Kodning','kod'],
+];
+
+const COLMAP = {red:'b-red',orange:'b-orange',yellow:'b-amber',green:'b-green',blue:'b-blue',gray:'b-gray'};
+const TCOL = t => t==null?'#cfd5e3': t<=29?'#e5484d': t<=34?'#e8820e': t<=39?'#d9a40b': t<=59?'#15a86b':'#3b82f6';
+
+let gRes = {};
+
+// ── Bygg korten ──────────────────────────────────────────────────────
+function byggKort(){
+  document.getElementById('cards').innerHTML = KORT.map(k=>`
+    <div class="card" id="card-${k.id}">
+      <div class="card-h" onclick="this.parentElement.classList.toggle('collapsed')">
+        <div class="ic" style="background:${k.icbg}">${k.ic}</div>
+        <div class="ttl">${k.ttl}</div><div class="chev">▼</div>
+      </div>
+      <div class="card-b">
+        ${k.falt.map(f=>`<div class="in">
+          <label title="${f.l}">${f.l}</label>
+          <input type="number" id="${f.id}" min="0" max="${f.max}" ${f.step?`step="${f.step}"`:''} inputmode="decimal">
+        </div>`).join('')}
+      </div>
+    </div>`).join('');
+  document.querySelectorAll('.card-b input, .pstrip input, .pstrip select, #utb_flode').forEach(el=>{
+    el.addEventListener('input', schemalagg);
+  });
+}
+
+// ── Live-beräkning (debounce) ────────────────────────────────────────
+let _t=null;
+function schemalagg(){ clearTimeout(_t); _t=setTimeout(berakna, 350); }
+
+function v(id){ const e=document.getElementById(id); return e&&e.value!==''?e.value:null; }
+
+async function berakna(){
+  const data = { alder: parseInt(v('alder'))||70, kon: v('kon'), utb: v('utb'), utb_flode: document.getElementById('utb_flode').value };
+  KORT.forEach(k=>k.falt.forEach(f=> data[f.id]=v(f.id) ));
+  // har vi någon inmatning alls?
+  const harData = KORT.some(k=>k.falt.some(f=>v(f.id)!==null));
+  try{
+    const r = await fetch('/berakna',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    if(!r.ok) throw new Error(r.status);
+    gRes = await r.json();
+    setConn(true);
+    rita(harData);
+  }catch(e){ setConn(false); }
+}
+function setConn(ok){
+  const c=document.getElementById('conn');
+  c.className='conn '+(ok?'ok':'bad'); c.textContent= ok?'ansluten · live':'ingen kontakt med servern';
+}
+
+// ── Rendera allt ─────────────────────────────────────────────────────
+function rita(harData){
+  ritaRadar();
+  ritaDomaner();
+  ritaNarr(harData);
+  ritaTabell(harData);
+}
+
+// Custom SVG-radar
+function ritaRadar(){
+  const N=AXLAR.length, R=128, cx=165, cy=158;
+  const vals = AXLAR.map(a=>gRes[a[0]]);
+  const ang = i => (Math.PI*2*i/N) - Math.PI/2;
+  const rT = t => { const tt=Math.max(20,Math.min(80, t==null?20:t)); return (tt-20)/60*R; };
+  const xy = (i,rr)=>[cx+Math.cos(ang(i))*rr, cy+Math.sin(ang(i))*rr];
+
+  let grid='';
+  [20,35,50,65,80].forEach(tv=>{
+    const rr=(tv-20)/60*R;
+    const pts=AXLAR.map((_,i)=>xy(i,rr).map(n=>n.toFixed(1)).join(',')).join(' ');
+    const cls = tv===40?'':(tv===35?'':'grid');
+    grid += `<polygon class="grid" points="${pts}" />`;
+    grid += `<text class="tick" x="${cx+2}" y="${(cy-rr+3).toFixed(1)}">${tv}</text>`;
+  });
+  // referenslinjer 40 & 35
+  [['ref40',40],['ref35',35]].forEach(([c,tv])=>{
+    const rr=(tv-20)/60*R;
+    const pts=AXLAR.map((_,i)=>xy(i,rr).map(n=>n.toFixed(1)).join(',')).join(' ');
+    grid += `<polygon class="${c}" points="${pts}" />`;
+  });
+  let spokes='', labels='';
+  AXLAR.forEach((a,i)=>{
+    const [x,y]=xy(i,R);
+    spokes += `<line class="spoke" x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}"/>`;
+    const [lx,ly]=xy(i,R+16);
+    const anchor = Math.abs(lx-cx)<8?'middle':(lx>cx?'start':'end');
+    labels += `<text class="lbl" x="${lx.toFixed(1)}" y="${(ly+3).toFixed(1)}" text-anchor="${anchor}">${a[1]}</text>`;
+  });
+  // datapolygon (saknade → centrum)
+  const polyPts = AXLAR.map((a,i)=> xy(i, rT(vals[i])).map(n=>n.toFixed(1)).join(',')).join(' ');
+  let pts='';
+  AXLAR.forEach((a,i)=>{
+    if(vals[i]==null) return;
+    const [x,y]=xy(i,rT(vals[i]));
+    pts += `<circle class="pt" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.4" fill="${TCOL(vals[i])}" stroke="#fff" stroke-width="1.4"/>`;
+  });
+  document.getElementById('radar').innerHTML =
+    `<svg class="radar" viewBox="0 0 330 330">
+       ${grid}${spokes}
+       <polygon class="poly" points="${polyPts}"/>
+       ${pts}${labels}
+     </svg>`;
+}
+
+function domMedel(keys){
+  const xs = keys.map(k=>gRes[k]).filter(x=>x!=null && !isNaN(x));
+  if(!xs.length) return null;
+  return xs.reduce((a,b)=>a+b,0)/xs.length;
+}
+function ritaDomaner(){
+  document.getElementById('domains').innerHTML = DOMANER.map(([namn,keys])=>{
+    const m = domMedel(keys);
+    const pct = m==null?0:Math.max(0,Math.min(100,(m-20)/60*100));
+    const col = TCOL(m);
+    return `<div class="dom">
+      <div class="dom-top"><span class="dom-name">${namn}</span>
+        <span class="dom-val" style="color:${m==null?'#b3b9c7':col}">${m==null?'—':('T '+m.toFixed(0))}</span></div>
+      <div class="dom-bar"><div class="dom-fill" style="width:${pct}%;background:${col}"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function ritaNarr(harData){
+  const el = document.getElementById('narr');
+  if(!harData){
+    el.innerHTML = `<div class="empty"><div class="big">🧠</div>Börja mata in testpoäng – profilen, domänerna och den här sammanfattningen byggs upp medan du skriver.</div>`;
+    return;
+  }
+  const namnAv = {};
+  DOMANER.forEach(([n,k])=>namnAv[n]=domMedel(k));
+  const ned = [], gransom = [], starka = [];
+  DOMANER.forEach(([n,k])=>{ const m=domMedel(k); if(m==null)return;
+    if(m<35) ned.push(n); else if(m<40) gransom.push(n); else if(m>=55) starka.push(n); });
+  const pill = (txt,cls)=>`<span class="pill ${cls}">${txt}</span>`;
+  let s = '';
+  if(ned.length) s += `Tydligt nedsatt funktion inom ${ned.map(n=>pill(n.toLowerCase(),'b-red')).join(', ')}. `;
+  if(gransom.length) s += `Gränsvärden noteras för ${gransom.map(n=>pill(n.toLowerCase(),'b-amber')).join(', ')}. `;
+  if(!ned.length && !gransom.length) s += `Profilen ligger genomgående inom normalområdet. `;
+  if(starka.length) s += `Relativt bevarad förmåga inom ${starka.map(n=>pill(n.toLowerCase(),'b-green')).join(', ')}. `;
+  // minnesmönster
+  const vm=namnAv['Verbalt minne'], vism=namnAv['Visuospatialt minne'];
+  if(vm!=null && vism!=null && Math.abs(vm-vism)>=8){
+    s += vm<vism ? `Verbalt minne framstår som svagare än visuospatialt (möjlig vänsterdominans). `
+                 : `Visuospatialt minne framstår som svagare än verbalt (möjlig högerdominans). `;
+  }
+  // TMT B/A
+  if(gRes.tmt_ba_kvot!=null) s += `TMT B/A-kvot ${gRes.tmt_ba_kvot}${gRes.tmt_ba_kvot>3?' – över klinisk markör för exekutiv svikt.':'.'} `;
+  // nya percentilmått
+  const extra=[];
+  if(gRes.ravlt_lot_pct) extra.push(`RAVLT inlärning (LOT) percentil ${gRes.ravlt_lot_pct}`);
+  if(gRes.bvmt_di_pc) extra.push(`BVMT igenkänning percentil ${gRes.bvmt_di_pc}`);
+  if(extra.length) s += `<br><span style="color:var(--sub);font-size:13px">${extra.join(' · ')}.</span>`;
+  el.innerHTML = s || `<div class="empty">Fortsätt mata in poäng…</div>`;
+}
+
+function ritaTabell(harData){
+  const panel=document.getElementById('resPanel');
+  let any=false;
+  const rows = RTAB.map(([lbl,key])=>{
+    if(key===null) return `<tr class="cat"><td colspan="3">${lbl}</td></tr>`;
+    const raw = gRes[key]!==undefined?gRes[key]:gRes[key+'_raw'];
+    const t = gRes[key+'_t'];
+    const col = gRes[key+'_color'], badge = gRes[key+'_label'];
+    if(raw==null && t==null) return '';
+    any=true;
+    return `<tr>
+      <td>${lbl}</td>
+      <td class="tnum" style="color:${TCOL(t)}">${t!=null?Math.round(t):'—'}</td>
+      <td>${badge?`<span class="bdg ${COLMAP[col]||'b-gray'}">${badge}</span>`:'—'}</td>
+    </tr>`;
+  }).join('');
+  // ta bort kategori-rader utan följande data
+  document.getElementById('resBody').innerHTML = rows;
+  panel.style.display = (harData && any)?'block':'none';
+}
+
+// ── Övningsläge: visa/dölj facit ─────────────────────────────────────
+function vaxlaFacit(){
+  const f=document.getElementById('facit'), b=document.getElementById('visaFacit');
+  const oppen = f.style.display!=='none';
+  f.style.display = oppen ? 'none' : 'block';
+  b.textContent = oppen ? '👁 Visa Lumens observationer' : '🙈 Dölj observationer';
+  if(!oppen) f.scrollIntoView({block:'nearest',behavior:'smooth'});
+}
+
+// ── Verktyg ──────────────────────────────────────────────────────────
+function rensaAllt(){
+  document.querySelectorAll('input[type=number]').forEach(i=>i.value='');
+  document.getElementById('kon').value=''; gRes={}; berakna();
+}
+function fyllExempel(){
+  const ex={alder:72,utb:9, ravlt_1:3,ravlt_2:5,ravlt_3:6,ravlt_4:7,ravlt_5:8,ravlt_dist:3,ravlt_dr:4,ravlt_rek_sp:11,ravlt_rek_fp:3,
+    bvmt_1:2,bvmt_2:4,bvmt_3:5,bvmt_dr:3,bvmt_rek_sp:5,bvmt_rek_fp:1,
+    rcft_kop:30,rcft_3min:12,rcft_30min:11,
+    block_raw:28,lik_raw:18,info_raw:14,kod_raw:42,siff_fram:8,siff_bak:5,siff_ordning:5,
+    tmt_a:48,tmt_b:140,fas_f:8,fas_a:9,fas_s:7,djur:14,klocka_rita:4,klocka_avlasa:5};
+  document.getElementById('kon').value='Man';
+  Object.entries(ex).forEach(([k,val])=>{ const e=document.getElementById(k==='block_raw'?'block_raw':k); if(e){e.value=val; e.classList.add('flash'); setTimeout(()=>e.classList.remove('flash'),600);} });
+  berakna();
+}
+
+byggKort(); berakna();
+</script>
+</body>
+</html>
