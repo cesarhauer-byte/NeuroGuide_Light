@@ -125,15 +125,6 @@ svg.radar{width:100%;height:auto;display:block;overflow:visible}
 .btn-primary{background:var(--ind);border-color:var(--ind);color:#fff}
 .btn-primary:hover{background:var(--ind-dk)}
 .toolbar{display:flex;gap:10px;margin-bottom:22px;flex-wrap:wrap}
-/* Övningsläge */
-.scaffold{font-size:13.5px;color:var(--ink2);background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:13px 15px;margin-bottom:12px}
-.scaffold b{color:var(--ink)}
-.scaffold ul{margin:8px 0 0;padding-left:18px}
-.scaffold li{margin:4px 0}
-.egen{width:100%;min-height:140px;border:1.5px solid var(--line);border-radius:12px;background:var(--bg2);padding:12px 13px;font:inherit;font-size:14.5px;color:var(--ink);outline:none;resize:vertical;line-height:1.65}
-.egen:focus{border-color:var(--ind);background:#fff;box-shadow:0 0 0 4px rgba(91,108,255,.13)}
-.facit{margin-top:16px;padding-top:14px;border-top:1px dashed var(--line);animation:fadein .35s}
-@keyframes fadein{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
 </style>
 </head>
 <body>
@@ -177,25 +168,6 @@ svg.radar{width:100%;height:auto;display:block;overflow:visible}
       <div id="domains"></div>
     </div>
 
-    <div class="panel">
-      <div class="panel-t">🧭 Din tolkning</div>
-      <div class="scaffold">
-        <b>Tänk själv först – innan du tittar på facit:</b>
-        <ul>
-          <li>Vilka domäner är nedsatta, och hur uttalat?</li>
-          <li>Finns ett verbalt/visuospatialt (vänster/höger) mönster?</li>
-          <li>Talar tempo &amp; exekutivt för ett subkortikalt inslag?</li>
-          <li>Vad talar <i>för</i> respektive <i>emot</i> olika diagnoser?</li>
-        </ul>
-      </div>
-      <textarea id="egen" class="egen" placeholder="Skriv din egen tolkning av profilen här först…"></textarea>
-      <button class="btn btn-primary" id="visaFacit" style="width:100%;margin-top:11px" onclick="vaxlaFacit()">👁 Visa Lumens observationer</button>
-      <div id="facit" class="facit" style="display:none">
-        <div class="panel-t" style="margin:0 0 10px">📝 Lumens observationer · jämför med din tolkning</div>
-        <div class="narr" id="narr"></div>
-      </div>
-    </div>
-
     <div class="panel" id="resPanel" style="display:none">
       <div class="panel-t">📋 Alla beräknade värden</div>
       <table class="rtab"><tbody id="resBody"></tbody></table>
@@ -204,8 +176,8 @@ svg.radar{width:100%;height:auto;display:block;overflow:visible}
 </div>
 
 <div class="foot">
-  NeuroGuide Exploring · övningsläge — mata in poäng, läs profilen och formulera din egen tolkning.
-  Fäll först ut <span class="kbd">Lumens observationer</span> när du tänkt klart, och jämför.
+  NeuroGuide Exploring · övningsläge — verktyget visar bara profilen och värdena.
+  Tolkningen gör du själv med hjälp av kurslitteraturen och din handledare.
 </div>
 
 <script>
@@ -326,7 +298,6 @@ function setConn(ok){
 function rita(harData){
   ritaRadar();
   ritaDomaner();
-  ritaNarr(harData);
   ritaTabell(harData);
 }
 
@@ -394,39 +365,6 @@ function ritaDomaner(){
   }).join('');
 }
 
-function ritaNarr(harData){
-  const el = document.getElementById('narr');
-  if(!harData){
-    el.innerHTML = `<div class="empty"><div class="big">🧠</div>Börja mata in testpoäng – profilen, domänerna och den här sammanfattningen byggs upp medan du skriver.</div>`;
-    return;
-  }
-  const namnAv = {};
-  DOMANER.forEach(([n,k])=>namnAv[n]=domMedel(k));
-  const ned = [], gransom = [], starka = [];
-  DOMANER.forEach(([n,k])=>{ const m=domMedel(k); if(m==null)return;
-    if(m<35) ned.push(n); else if(m<40) gransom.push(n); else if(m>=55) starka.push(n); });
-  const pill = (txt,cls)=>`<span class="pill ${cls}">${txt}</span>`;
-  let s = '';
-  if(ned.length) s += `Tydligt nedsatt funktion inom ${ned.map(n=>pill(n.toLowerCase(),'b-red')).join(', ')}. `;
-  if(gransom.length) s += `Gränsvärden noteras för ${gransom.map(n=>pill(n.toLowerCase(),'b-amber')).join(', ')}. `;
-  if(!ned.length && !gransom.length) s += `Profilen ligger genomgående inom normalområdet. `;
-  if(starka.length) s += `Relativt bevarad förmåga inom ${starka.map(n=>pill(n.toLowerCase(),'b-green')).join(', ')}. `;
-  // minnesmönster
-  const vm=namnAv['Verbalt minne'], vism=namnAv['Visuospatialt minne'];
-  if(vm!=null && vism!=null && Math.abs(vm-vism)>=8){
-    s += vm<vism ? `Verbalt minne framstår som svagare än visuospatialt (möjlig vänsterdominans). `
-                 : `Visuospatialt minne framstår som svagare än verbalt (möjlig högerdominans). `;
-  }
-  // TMT B/A
-  if(gRes.tmt_ba_kvot!=null) s += `TMT B/A-kvot ${gRes.tmt_ba_kvot}${gRes.tmt_ba_kvot>3?' – över klinisk markör för exekutiv svikt.':'.'} `;
-  // nya percentilmått
-  const extra=[];
-  if(gRes.ravlt_lot_pct) extra.push(`RAVLT inlärning (LOT) percentil ${gRes.ravlt_lot_pct}`);
-  if(gRes.bvmt_di_pc) extra.push(`BVMT igenkänning percentil ${gRes.bvmt_di_pc}`);
-  if(extra.length) s += `<br><span style="color:var(--sub);font-size:13px">${extra.join(' · ')}.</span>`;
-  el.innerHTML = s || `<div class="empty">Fortsätt mata in poäng…</div>`;
-}
-
 function ritaTabell(harData){
   const panel=document.getElementById('resPanel');
   let any=false;
@@ -446,15 +384,6 @@ function ritaTabell(harData){
   // ta bort kategori-rader utan följande data
   document.getElementById('resBody').innerHTML = rows;
   panel.style.display = (harData && any)?'block':'none';
-}
-
-// ── Övningsläge: visa/dölj facit ─────────────────────────────────────
-function vaxlaFacit(){
-  const f=document.getElementById('facit'), b=document.getElementById('visaFacit');
-  const oppen = f.style.display!=='none';
-  f.style.display = oppen ? 'none' : 'block';
-  b.textContent = oppen ? '👁 Visa Lumens observationer' : '🙈 Dölj observationer';
-  if(!oppen) f.scrollIntoView({block:'nearest',behavior:'smooth'});
 }
 
 // ── Verktyg ──────────────────────────────────────────────────────────
